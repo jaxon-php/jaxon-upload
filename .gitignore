@@ -5,4 +5,5 @@ vendor/
 composer.lock
 build/
 .phpunit.result.cache
-tests/tmp
+tests/upload/tmp
+tests/upload/dst
