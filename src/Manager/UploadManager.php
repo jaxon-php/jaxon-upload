@@ -53,9 +53,9 @@ class UploadManager
     /**
      * The file and dir name generator
      *
-     * @var NameGeneratorInterface
+     * @var FileNameInterface
      */
-    protected $xNameGenerator;
+    protected $xFileName;
 
     /**
      * The filesystem adapter
@@ -88,16 +88,16 @@ class UploadManager
     /**
      * The constructor
      *
-     * @param NameGeneratorInterface $xNameGenerator
+     * @param FileNameInterface $xFileName
      * @param ConfigManager $xConfigManager
      * @param Validator $xValidator
      * @param Translator $xTranslator
      * @param Filesystem $xFilesystem
      */
-    public function __construct(NameGeneratorInterface $xNameGenerator, ConfigManager $xConfigManager,
+    public function __construct(FileNameInterface $xFileName, ConfigManager $xConfigManager,
         Validator $xValidator, Translator $xTranslator, Filesystem $xFilesystem)
     {
-        $this->xNameGenerator = $xNameGenerator;
+        $this->xFileName = $xFileName;
         $this->xConfigManager = $xConfigManager;
         $this->xValidator = $xValidator;
         $this->xTranslator = $xTranslator;
@@ -113,7 +113,7 @@ class UploadManager
      */
     protected function randomName(): string
     {
-        return $this->xNameGenerator->random(14);
+        return $this->xFileName->random(14);
     }
 
     /**

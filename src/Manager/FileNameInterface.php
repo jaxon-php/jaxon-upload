@@ -2,7 +2,7 @@
 
 namespace Jaxon\Upload\Manager;
 
-interface NameGeneratorInterface
+interface FileNameInterface
 {
     /**
      * Generate a random name for a file or dir
