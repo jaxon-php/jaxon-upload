@@ -134,7 +134,7 @@ class UploadFsLocalTest extends TestCase
      */
     public function testHttpUploadErrorDirNotFound()
     {
-        jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/not-found');
+        jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst/not-found');
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)->fromGlobals()->withUploadedFiles([

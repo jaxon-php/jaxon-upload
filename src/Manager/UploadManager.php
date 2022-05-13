@@ -180,7 +180,7 @@ class UploadManager
     private function getUploadDir(string $sFieldId): array
     {
         $xFilesystem = $this->xFileStorage->filesystem($sFieldId);
-        return [$xFilesystem, $this->_makeUploadDir($xFilesystem, $this->randomName())];
+        return [$xFilesystem, $this->_makeUploadDir($xFilesystem, $this->randomName() . '/')];
     }
 
     /**
@@ -192,7 +192,7 @@ class UploadManager
     private function getUploadTempDir(): array
     {
         $xFilesystem = $this->xFileStorage->filesystem();
-        return [$xFilesystem, $this->_makeUploadDir($xFilesystem, 'tmp')];
+        return [$xFilesystem, $this->_makeUploadDir($xFilesystem, 'tmp/')];
     }
 
     /**
@@ -300,7 +300,7 @@ class UploadManager
         $sTempFile = $this->randomName();
         try
         {
-            $xFilesystem->write($sUploadDir . '/' . $sTempFile . '.json', json_encode($aFiles));
+            $xFilesystem->write($sUploadDir . $sTempFile . '.json', json_encode($aFiles));
         }
         catch(FilesystemException $e)
         {
@@ -325,7 +325,7 @@ class UploadManager
             throw new RequestException($this->xTranslator->trans('errors.upload.invalid'));
         }
         [$xFilesystem, $sUploadDir] = $this->getUploadTempDir();
-        $sUploadTempFile = $sUploadDir . '/' . $sTempFile . '.json';
+        $sUploadTempFile = $sUploadDir . $sTempFile . '.json';
         try
         {
             if($xFilesystem->visibility($sUploadTempFile) !== Visibility::PUBLIC)
