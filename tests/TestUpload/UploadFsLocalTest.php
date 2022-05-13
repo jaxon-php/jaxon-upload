@@ -6,7 +6,6 @@ use Jaxon\Jaxon;
 use Jaxon\Exception\RequestException;
 use Jaxon\Exception\SetupException;
 use Jaxon\Upload\Manager\FileNameInterface;
-use Jaxon\Upload\UploadHandler;
 use Jaxon\Upload\UploadResponse;
 use Nyholm\Psr7\UploadedFile;
 use Nyholm\Psr7Server\ServerRequestCreator;
@@ -15,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 
 use function jaxon;
 use function filesize;
-use function realpath;
+use function Jaxon\Upload\registerUpload;
 
 class UploadFsLocalTest extends TestCase
 {
@@ -55,10 +54,10 @@ class UploadFsLocalTest extends TestCase
     public function setUp(): void
     {
         jaxon()->di()->getPluginManager()->registerPlugins();
-        UploadHandler::register(jaxon()->di());
+        registerUpload();
 
         jaxon()->setOption('core.response.send', false);
-        $tmpDir = realpath(__DIR__ . '/../upload/tmp');
+        $tmpDir = __DIR__ . '/../upload/tmp';
         @mkdir($tmpDir);
 
         $sSrcWhite = __DIR__ . '/../upload/src/white.png';
@@ -92,6 +91,7 @@ class UploadFsLocalTest extends TestCase
      */
     public function testHttpUploadDirAccessError()
     {
+        jaxon()->setOption('core.upload.enabled', true);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)->fromGlobals()->withUploadedFiles([
@@ -113,6 +113,7 @@ class UploadFsLocalTest extends TestCase
      */
     public function testHttpUploadErrorNoDir()
     {
+        jaxon()->setOption('core.upload.enabled', true);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)->fromGlobals()->withUploadedFiles([
@@ -134,6 +135,7 @@ class UploadFsLocalTest extends TestCase
      */
     public function testHttpUploadErrorDirNotFound()
     {
+        jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst/not-found');
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
@@ -156,6 +158,7 @@ class UploadFsLocalTest extends TestCase
      */
     public function testHttpUploadErrorNoTmpDir()
     {
+        jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.files.image.dir', __DIR__ . '/../upload/dst');
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
@@ -178,6 +181,7 @@ class UploadFsLocalTest extends TestCase
      */
     public function testHttpUploadErrorDirCreation()
     {
+        jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst');
         // Upload file and dir name generator
         jaxon()->di()->set(FileNameInterface::class, function() {
@@ -245,6 +249,7 @@ class UploadFsLocalTest extends TestCase
      */
     public function testAjaxRequestAfterHttpUploadIncorrectFile()
     {
+        jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst');
         // Ajax request following an HTTP upload
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
@@ -267,6 +272,7 @@ class UploadFsLocalTest extends TestCase
      */
     public function testAjaxRequestAfterHttpUploadUnknownFile()
     {
+        jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst');
         // Ajax request following an HTTP upload
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {

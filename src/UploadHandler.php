@@ -14,25 +14,18 @@
 
 namespace Jaxon\Upload;
 
-use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
-use Jaxon\Di\Container;
 use Jaxon\Exception\RequestException;
 use Jaxon\Request\Handler\UploadHandlerInterface;
 use Jaxon\Response\Manager\ResponseManager;
-use Jaxon\Upload\Manager\FileNameInterface;
-use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
-use Jaxon\Upload\Manager\Validator;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ServerRequestInterface;
 
 use Closure;
 use Exception;
 
-use function bin2hex;
 use function count;
-use function random_bytes;
 use function trim;
 
 class UploadHandler implements UploadHandlerInterface
@@ -99,50 +92,6 @@ class UploadHandler implements UploadHandlerInterface
         $this->xResponseManager = $xResponseManager;
         $this->xTranslator = $xTranslator;
         $this->xPsr17Factory = $xPsr17Factory;
-    }
-
-    /**
-     * @param Container $di
-     * @param bool $bForce Force registration
-     *
-     * @return void
-     */
-    public static function register(Container $di, bool $bForce = false)
-    {
-        if(!$bForce && $di->h(UploadHandler::class))
-        {
-            return;
-        }
-        // Upload file and dir name generator
-        $di->set(FileNameInterface::class, function() {
-            return new class implements FileNameInterface
-            {
-                public function random(int $nLength): string
-                {
-                    return bin2hex(random_bytes((int)($nLength / 2)));
-                }
-            };
-        });
-        // Upload validator
-        $di->set(Validator::class, function($c) {
-            return new Validator($c->g(ConfigManager::class), $c->g(Translator::class));
-        });
-        // File storage
-        $di->set(FileStorage::class, function($c) {
-            return new FileStorage($c->g(ConfigManager::class), $c->g(Translator::class));
-        });
-        // File upload manager
-        $di->set(UploadManager::class, function($c) {
-            return new UploadManager($c->g(FileNameInterface::class), $c->g(ConfigManager::class),
-                $c->g(Validator::class), $c->g(Translator::class), $c->g(FileStorage::class));
-        });
-        // File upload plugin
-        $di->set(UploadHandler::class, function($c) {
-            return new UploadHandler($c->g(UploadManager::class), $c->g(ResponseManager::class),
-                $c->g(Translator::class), $c->g(Psr17Factory::class));
-        });
-        // Set alias on the interface
-        $di->alias(UploadHandlerInterface::class, UploadHandler::class);
     }
 
     /**

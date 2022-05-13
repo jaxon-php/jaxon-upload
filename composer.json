@@ -25,7 +25,10 @@
     "autoload": {
         "psr-4": {
             "Jaxon\\Upload\\": "src/"
-        }
+        },
+        "files": [
+            "src/start.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

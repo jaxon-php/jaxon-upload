@@ -5,7 +5,6 @@ namespace Jaxon\Upload\Tests\TestUpload;
 use Jaxon\Jaxon;
 use Jaxon\Exception\RequestException;
 use Jaxon\Exception\SetupException;
-use Jaxon\Upload\UploadHandler;
 use Jaxon\Upload\UploadResponse;
 use Nyholm\Psr7\UploadedFile;
 use Nyholm\Psr7Server\ServerRequestCreator;
@@ -14,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 use function jaxon;
 use function filesize;
-use function realpath;
+use function Jaxon\Upload\registerUpload;
 
 class UploadHandlerTest extends TestCase
 {
@@ -54,7 +53,8 @@ class UploadHandlerTest extends TestCase
     public function setUp(): void
     {
         jaxon()->di()->getPluginManager()->registerPlugins();
-        UploadHandler::register(jaxon()->di());
+        registerUpload();
+        jaxon()->setOption('core.upload.enabled', true);
 
         jaxon()->setOption('core.response.send', false);
         $tmpDir = __DIR__ . '/../upload/tmp';
