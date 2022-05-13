@@ -6,6 +6,7 @@ use Jaxon\Jaxon;
 use Jaxon\Exception\RequestException;
 use Jaxon\Exception\SetupException;
 use Jaxon\Upload\Manager\FileNameInterface;
+use Jaxon\Upload\UploadHandler;
 use Jaxon\Upload\UploadResponse;
 use Nyholm\Psr7\UploadedFile;
 use Nyholm\Psr7Server\ServerRequestCreator;
@@ -53,6 +54,9 @@ class UploadFsLocalTest extends TestCase
      */
     public function setUp(): void
     {
+        jaxon()->di()->getPluginManager()->registerPlugins();
+        UploadHandler::register(jaxon()->di());
+
         jaxon()->setOption('core.response.send', false);
         $tmpDir = realpath(__DIR__ . '/../upload/tmp');
         @mkdir($tmpDir);
