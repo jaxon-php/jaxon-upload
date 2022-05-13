@@ -14,26 +14,35 @@
 
 namespace Jaxon\Upload;
 
+use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
 use Jaxon\Di\Container;
 use Jaxon\Exception\RequestException;
+use Jaxon\Request\Handler\UploadHandlerInterface;
 use Jaxon\Response\Manager\ResponseManager;
+use Jaxon\Upload\Manager\FileNameInterface;
+use Jaxon\Upload\Manager\FileStorage;
+use Jaxon\Upload\Manager\UploadManager;
+use Jaxon\Upload\Manager\Validator;
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ServerRequestInterface;
 
 use Closure;
 use Exception;
 
+use function bin2hex;
 use function count;
+use function random_bytes;
 use function trim;
 
-class UploadHandler
+class UploadHandler implements UploadHandlerInterface
 {
     /**
-     * DI container
+     * The upload manager
      *
-     * @var Container
+     * @var UploadManager
      */
-    protected $di;
+    protected $xUploadManager;
 
     /**
      * The response manager
@@ -46,6 +55,13 @@ class UploadHandler
      * @var Translator
      */
     protected $xTranslator;
+
+    /**
+     * The Psr17 factory
+     *
+     * @var Psr17Factory
+     */
+    protected $xPsr17Factory;
 
     /**
      * The uploaded files copied in the user dir
@@ -71,15 +87,62 @@ class UploadHandler
     /**
      * The constructor
      *
-     * @param Container $di
+     * @param UploadManager $xUploadManager
      * @param ResponseManager $xResponseManager
      * @param Translator $xTranslator
+     * @param Psr17Factory $xPsr17Factory
      */
-    public function __construct(Container $di, ResponseManager $xResponseManager, Translator $xTranslator)
+    public function __construct(UploadManager $xUploadManager, ResponseManager $xResponseManager,
+        Translator $xTranslator, Psr17Factory $xPsr17Factory)
     {
-        $this->di = $di;
+        $this->xUploadManager = $xUploadManager;
         $this->xResponseManager = $xResponseManager;
         $this->xTranslator = $xTranslator;
+        $this->xPsr17Factory = $xPsr17Factory;
+    }
+
+    /**
+     * @param Container $di
+     * @param bool $bForce Force registration
+     *
+     * @return void
+     */
+    public static function register(Container $di, bool $bForce = false)
+    {
+        if(!$bForce && $di->h(UploadHandler::class))
+        {
+            return;
+        }
+        // Upload file and dir name generator
+        $di->set(FileNameInterface::class, function() {
+            return new class implements FileNameInterface
+            {
+                public function random(int $nLength): string
+                {
+                    return bin2hex(random_bytes((int)($nLength / 2)));
+                }
+            };
+        });
+        // Upload validator
+        $di->set(Validator::class, function($c) {
+            return new Validator($c->g(ConfigManager::class), $c->g(Translator::class));
+        });
+        // File storage
+        $di->set(FileStorage::class, function($c) {
+            return new FileStorage($c->g(ConfigManager::class), $c->g(Translator::class));
+        });
+        // File upload manager
+        $di->set(UploadManager::class, function($c) {
+            return new UploadManager($c->g(FileNameInterface::class), $c->g(ConfigManager::class),
+                $c->g(Validator::class), $c->g(Translator::class), $c->g(FileStorage::class));
+        });
+        // File upload plugin
+        $di->set(UploadHandler::class, function($c) {
+            return new UploadHandler($c->g(UploadManager::class), $c->g(ResponseManager::class),
+                $c->g(Translator::class), $c->g(Psr17Factory::class));
+        });
+        // Set alias on the interface
+        $di->alias(UploadHandlerInterface::class, UploadHandler::class);
     }
 
     /**
@@ -91,7 +154,7 @@ class UploadHandler
      */
     public function sanitizer(Closure $cSanitizer)
     {
-        $this->di->getUploadManager()->setNameSanitizer($cSanitizer);
+        $this->xUploadManager->setNameSanitizer($cSanitizer);
     }
 
     /**
@@ -166,12 +229,11 @@ class UploadHandler
      */
     public function processRequest(ServerRequestInterface $xRequest): bool
     {
-        $xUploadManager = $this->di->getUploadManager();
         if($this->setTempFile($xRequest))
         {
             // Ajax request following a normal HTTP upload.
             // Copy the previously uploaded files' location from the temp file.
-            $this->aUserFiles = $xUploadManager->readFromTempFile($this->sTempFile);
+            $this->aUserFiles = $this->xUploadManager->readFromTempFile($this->sTempFile);
             return true;
         }
 
@@ -179,7 +241,7 @@ class UploadHandler
         {
             // Ajax request with upload.
             // Copy the uploaded files from the HTTP request.
-            $this->aUserFiles = $xUploadManager->readFromHttpData($xRequest);
+            $this->aUserFiles = $this->xUploadManager->readFromHttpData($xRequest);
             return true;
         }
 
@@ -188,13 +250,13 @@ class UploadHandler
         try
         {
             // Copy the uploaded files from the HTTP request, and create the temp file.
-            $this->aUserFiles = $xUploadManager->readFromHttpData($xRequest);
-            $sTempFile = $xUploadManager->saveToTempFile($this->aUserFiles);
-            $this->xResponseManager->append(new UploadResponse($this->di->getPsr17Factory(), $sTempFile));
+            $this->aUserFiles = $this->xUploadManager->readFromHttpData($xRequest);
+            $sTempFile = $this->xUploadManager->saveToTempFile($this->aUserFiles);
+            $this->xResponseManager->append(new UploadResponse($this->xPsr17Factory, $sTempFile));
         }
         catch(Exception $e)
         {
-            $this->xResponseManager->append(new UploadResponse($this->di->getPsr17Factory(), '', $e->getMessage()));
+            $this->xResponseManager->append(new UploadResponse($this->xPsr17Factory, '', $e->getMessage()));
         }
         return true;
     }

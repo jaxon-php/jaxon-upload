@@ -14,6 +14,7 @@
 
 namespace Jaxon\Upload\Manager;
 
+use League\Flysystem\Filesystem;
 use Nyholm\Psr7\UploadedFile;
 
 use function pathinfo;
@@ -63,17 +64,26 @@ class File
     protected $sExtension;
 
     /**
+     * The filesystem where the file is stored
+     *
+     * @var Filesystem
+     */
+    protected $xFilesystem;
+
+    /**
      * Create an instance of this class using data from an uploaded file.
      *
+     * @param Filesystem $xFilesystem
+     * @param string $sUploadDir
      * @param string $sName
-     * @param string $sUploadDir    The directory where to save the uploaded file
-     * @param UploadedFile $xHttpFile    The uploaded file
+     * @param UploadedFile $xHttpFile
      *
      * @return File
      */
-    public static function fromHttpFile(string $sName, string $sUploadDir, UploadedFile $xHttpFile): File
+    public static function fromHttpFile(Filesystem $xFilesystem, string $sUploadDir, string $sName, UploadedFile $xHttpFile): File
     {
         $xFile = new File();
+        $xFile->xFilesystem = $xFilesystem;
         $xFile->sName = $sName;
         $xFile->sType = $xHttpFile->getClientMediaType();
         $xFile->sFilename = $xHttpFile->getClientFilename();
@@ -86,13 +96,15 @@ class File
     /**
      * Create an instance of this class using data from a temp file
      *
+     * @param Filesystem $xFilesystem
      * @param array $aFile    The uploaded file data
      *
      * @return File
      */
-    public static function fromTempFile(array $aFile): File
+    public static function fromTempFile(Filesystem $xFilesystem, array $aFile): File
     {
         $xFile = new File();
+        $xFile->xFilesystem = $xFilesystem;
         $xFile->sType = $aFile['type'];
         $xFile->sName = $aFile['name'];
         $xFile->sFilename = $aFile['filename'];
@@ -117,6 +129,16 @@ class File
             'size' => $this->sSize,
             'path' => $this->sPath,
         ];
+    }
+
+    /**
+     * Get the filesystem where the file is stored
+     *
+     * @return Filesystem
+     */
+    public function filesystem(): Filesystem
+    {
+        return $this->xFilesystem;
     }
 
     /**
