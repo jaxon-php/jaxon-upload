@@ -14,7 +14,6 @@
     },
     "require": {
         "ext-json": "*",
-        "jaxon-php/jaxon-core": "^4.0",
         "league/flysystem": "^3.0|^2.2"
     },
     "require-dev": {
@@ -25,10 +24,7 @@
     "autoload": {
         "psr-4": {
             "Jaxon\\Upload\\": "src/"
-        },
-        "files": [
-            "src/start.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
