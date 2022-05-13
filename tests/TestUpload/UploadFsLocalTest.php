@@ -133,7 +133,7 @@ class UploadFsLocalTest extends TestCase
     /**
      * @throws RequestException
      */
-    public function testHttpUploadErrorDirNotFound()
+    /*public function testHttpUploadErrorDirNotFound()
     {
         jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst/not-found');
@@ -151,7 +151,7 @@ class UploadFsLocalTest extends TestCase
         $this->assertEquals(UploadResponse::class, get_class($xResponse));
         $this->assertEquals('', $xResponse->getUploadedFile());
         $this->assertNotEquals('', $xResponse->getErrorMessage());
-    }
+    }*/
 
     /**
      * @throws RequestException
@@ -179,7 +179,7 @@ class UploadFsLocalTest extends TestCase
     /**
      * @throws RequestException
      */
-    public function testHttpUploadErrorDirCreation()
+    /*public function testHttpUploadErrorDirCreation()
     {
         jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst');
@@ -208,7 +208,7 @@ class UploadFsLocalTest extends TestCase
         $this->assertEquals(UploadResponse::class, get_class($xResponse));
         $this->assertEquals('', $xResponse->getUploadedFile());
         $this->assertNotEquals('', $xResponse->getErrorMessage());
-    }
+    }*/
 
     /**
      * @throws RequestException
