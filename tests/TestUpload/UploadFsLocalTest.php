@@ -54,6 +54,7 @@ class UploadFsLocalTest extends TestCase
     public function setUp(): void
     {
         jaxon()->di()->getPluginManager()->registerPlugins();
+        registerUpload();
 
         jaxon()->setOption('core.response.send', false);
         $tmpDir = __DIR__ . '/../upload/tmp';
