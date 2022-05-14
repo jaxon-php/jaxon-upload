@@ -14,12 +14,13 @@
 
 namespace Jaxon\Upload\Manager;
 
+use Jaxon\Request\Upload\FileInterface;
 use League\Flysystem\Filesystem;
 use Nyholm\Psr7\UploadedFile;
 
 use function pathinfo;
 
-class File
+class File implements FileInterface
 {
     /**
      * The uploaded file type
@@ -52,9 +53,9 @@ class File
     /**
      * The uploaded file size
      *
-     * @var string
+     * @var int
      */
-    protected $sSize;
+    protected $nSize;
 
     /**
      * The uploaded file extension
@@ -75,20 +76,18 @@ class File
      *
      * @param Filesystem $xFilesystem
      * @param string $sUploadDir
-     * @param string $sName
      * @param UploadedFile $xHttpFile
      *
      * @return File
      */
-    public static function fromHttpFile(Filesystem $xFilesystem, string $sUploadDir, string $sName, UploadedFile $xHttpFile): File
+    public static function fromHttpFile(Filesystem $xFilesystem, string $sUploadDir, UploadedFile $xHttpFile): File
     {
         $xFile = new File();
         $xFile->xFilesystem = $xFilesystem;
-        $xFile->sName = $sName;
         $xFile->sType = $xHttpFile->getClientMediaType();
         $xFile->sFilename = $xHttpFile->getClientFilename();
         $xFile->sExtension = pathinfo($xFile->sFilename, PATHINFO_EXTENSION);
-        $xFile->sSize = $xHttpFile->getSize();
+        $xFile->nSize = $xHttpFile->getSize();
         $xFile->sPath = $sUploadDir . $xFile->sName . '.' . $xFile->sExtension;
         return $xFile;
     }
@@ -109,7 +108,7 @@ class File
         $xFile->sName = $aFile['name'];
         $xFile->sFilename = $aFile['filename'];
         $xFile->sExtension = $aFile['extension'];
-        $xFile->sSize = $aFile['size'];
+        $xFile->nSize = $aFile['size'];
         $xFile->sPath = $aFile['path'];
         return $xFile;
     }
@@ -126,9 +125,17 @@ class File
             'name' => $this->sName,
             'filename' => $this->sFilename,
             'extension' => $this->sExtension,
-            'size' => $this->sSize,
+            'size' => $this->nSize,
             'path' => $this->sPath,
         ];
+    }
+
+    /**
+     * @param string $sName
+     */
+    public function setName(string $sName): void
+    {
+        $this->sName = $sName;
     }
 
     /**
@@ -184,11 +191,11 @@ class File
     /**
      * Get the uploaded file size
      *
-     * @return string
+     * @return int
      */
-    public function size(): string
+    public function size(): int
     {
-        return $this->sSize;
+        return $this->nSize;
     }
 
     /**

@@ -11,8 +11,11 @@ use Nyholm\Psr7Server\ServerRequestCreator;
 use Psr\Http\Message\ServerRequestInterface;
 use PHPUnit\Framework\TestCase;
 
+use function copy;
+use function get_class;
 use function jaxon;
 use function filesize;
+use function mkdir;
 use function Jaxon\Upload\registerUpload;
 
 class UploadHandlerTest extends TestCase
@@ -55,8 +58,8 @@ class UploadHandlerTest extends TestCase
         jaxon()->di()->getPluginManager()->registerPlugins();
         registerUpload();
         jaxon()->setOption('core.upload.enabled', true);
-
         jaxon()->setOption('core.response.send', false);
+
         $tmpDir = __DIR__ . '/../upload/tmp';
         @mkdir($tmpDir);
 

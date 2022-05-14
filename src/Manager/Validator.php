@@ -73,30 +73,30 @@ class Validator
     /**
      * Validate a temp file name
      *
-     * @param string $sName    The temp file name
+     * @param string $sVarName    The temp file name
      *
      * @return bool
      */
-    public function validateTempFileName(string $sName): bool
+    public function validateTempFileName(string $sVarName): bool
     {
         $this->sErrorMessage = '';
-        return (preg_match('/^[a-zA-Z0-9_\x7f-\xff]*$/', $sName) > 0);
+        return (preg_match('/^[a-zA-Z0-9_\x7f-\xff]*$/', $sVarName) > 0);
     }
 
     /**
      * Validate a property of an uploaded file
      *
-     * @param string $sName    The uploaded file variable name
+     * @param string $sVarName    The uploaded file variable name
      * @param string $sValue    The value of the property
      * @param string $sProperty    The property name in config options
      * @param string $sField    The field name in file data
      *
      * @return bool
      */
-    private function validateFileProperty(string $sName, string $sValue, string $sProperty, string $sField): bool
+    private function validateFileProperty(string $sVarName, string $sValue, string $sProperty, string $sField): bool
     {
         $xDefault = $this->xConfigManager->getOption('upload.default.' . $sProperty);
-        $aAllowed = $this->xConfigManager->getOption('upload.files.' . $sName . '.' . $sProperty, $xDefault);
+        $aAllowed = $this->xConfigManager->getOption('upload.files.' . $sVarName . '.' . $sProperty, $xDefault);
         if(is_array($aAllowed) && !in_array($sValue, $aAllowed))
         {
             $this->sErrorMessage = $this->xTranslator->trans('errors.upload.' . $sField, [$sField => $sValue]);
@@ -108,16 +108,16 @@ class Validator
     /**
      * Validate the size of an uploaded file
      *
-     * @param string $sName    The uploaded file variable name
+     * @param string $sVarName    The uploaded file variable name
      * @param int $nFileSize    The uploaded file size
      * @param string $sProperty    The property name in config options
      *
      * @return bool
      */
-    private function validateFileSize(string $sName, int $nFileSize, string $sProperty): bool
+    private function validateFileSize(string $sVarName, int $nFileSize, string $sProperty): bool
     {
         $xDefault = $this->xConfigManager->getOption('upload.default.' . $sProperty, 0);
-        $nSize = $this->xConfigManager->getOption('upload.files.' . $sName . '.' . $sProperty, $xDefault);
+        $nSize = $this->xConfigManager->getOption('upload.files.' . $sVarName . '.' . $sProperty, $xDefault);
         if($nSize > 0 && (
             ($sProperty == 'max-size' && $nFileSize > $nSize) ||
             ($sProperty == 'min-size' && $nFileSize < $nSize)))
@@ -131,34 +131,34 @@ class Validator
     /**
      * Validate an uploaded file
      *
-     * @param string $sName    The uploaded file variable name
+     * @param string $sVarName    The uploaded file variable name
      * @param File $xFile    The uploaded file
      *
      * @return bool
      */
-    public function validateUploadedFile(string $sName, File $xFile): bool
+    public function validateUploadedFile(string $sVarName, File $xFile): bool
     {
         $this->sErrorMessage = '';
         // Verify the file extension
-        if(!$this->validateFileProperty($sName, $xFile->type(), 'types', 'type'))
+        if(!$this->validateFileProperty($sVarName, $xFile->type(), 'types', 'type'))
         {
             return false;
         }
 
         // Verify the file extension
-        if(!$this->validateFileProperty($sName, $xFile->extension(), 'extensions', 'extension'))
+        if(!$this->validateFileProperty($sVarName, $xFile->extension(), 'extensions', 'extension'))
         {
             return false;
         }
 
         // Verify the max size
-        if(!$this->validateFileSize($sName, $xFile->size(), 'max-size'))
+        if(!$this->validateFileSize($sVarName, $xFile->size(), 'max-size'))
         {
             return false;
         }
 
         // Verify the min size
-        if(!$this->validateFileSize($sName, $xFile->size(), 'min-size'))
+        if(!$this->validateFileSize($sVarName, $xFile->size(), 'min-size'))
         {
             return false;
         }
