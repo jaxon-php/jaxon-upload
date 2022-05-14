@@ -16,7 +16,7 @@ namespace Jaxon\Upload;
 
 use Jaxon\App\I18n\Translator;
 use Jaxon\Exception\RequestException;
-use Jaxon\Request\Handler\UploadHandlerInterface;
+use Jaxon\Request\Upload\UploadHandlerInterface;
 use Jaxon\Response\Manager\ResponseManager;
 use Jaxon\Upload\Manager\UploadManager;
 use Nyholm\Psr7\Factory\Psr17Factory;

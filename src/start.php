@@ -7,7 +7,7 @@ use Jaxon\App\Config\ConfigListenerInterface;
 use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
 use Jaxon\Di\Container;
-use Jaxon\Request\Handler\UploadHandlerInterface;
+use Jaxon\Request\Upload\UploadHandlerInterface;
 use Jaxon\Response\Manager\ResponseManager;
 use Jaxon\Upload\Manager\FileNameInterface;
 use Jaxon\Upload\Manager\FileStorage;
@@ -73,22 +73,20 @@ function registerUpload()
 {
     $di = jaxon()->di();
     $sEventListenerKey = UploadHandler::class . '\\ConfigListener';
+    if($di->h($sEventListenerKey))
+    {
+        return;
+    }
+
     // The annotation package is installed, register the real annotation reader,
     // but only if the feature is activated in the config.
     $di->set($sEventListenerKey, function() {
         return new class implements ConfigListenerInterface
         {
-            public function onChanges(Config $xConfig)
-            {
-                if($xConfig->getOption('core.upload.enabled'))
-                {
-                    register(jaxon()->di());
-                }
-            }
-
             public function onChange(Config $xConfig, string $sName)
             {
-                if($sName === 'core.upload.enabled' && $xConfig->getOption('core.upload.enabled'))
+                $sConfigKey = 'core.upload.enabled';
+                if(($sName === $sConfigKey || $sName === '') && $xConfig->getOption($sConfigKey))
                 {
                     register(jaxon()->di());
                 }

@@ -27,12 +27,8 @@ use Closure;
 
 use function call_user_func;
 use function is_array;
-use function is_string;
 use function json_decode;
 use function json_encode;
-use function realpath;
-use function rtrim;
-use function trim;
 
 class UploadManager
 {
@@ -208,24 +204,25 @@ class UploadManager
      */
     private function makeUploadedFile(Filesystem $xFilesystem, string $sUploadDir, string $sVarName, UploadedFile $xHttpFile): File
     {
-        // Filename without the extension. Needs to be sanitized.
-        $sName = pathinfo($xHttpFile->getClientFilename(), PATHINFO_FILENAME);
-        if($this->cNameSanitizer !== null)
-        {
-            $sName = (string)call_user_func($this->cNameSanitizer, $sName, $sVarName, $this->sUploadFieldId);
-        }
         // Check the uploaded file validity
         if($xHttpFile->getError())
         {
             throw new RequestException($this->xTranslator->trans('errors.upload.failed', ['name' => $sVarName]));
         }
         // Set the user file data
-        $xFile = File::fromHttpFile($xFilesystem, $sUploadDir, $sName, $xHttpFile);
+        $xFile = File::fromHttpFile($xFilesystem, $sUploadDir, $xHttpFile);
         // Verify file validity (format, size)
         if(!$this->xValidator->validateUploadedFile($sVarName, $xFile))
         {
             throw new RequestException($this->xValidator->getErrorMessage());
         }
+        // Filename without the extension. Needs to be sanitized.
+        $sName = pathinfo($xHttpFile->getClientFilename(), PATHINFO_FILENAME);
+        if($this->cNameSanitizer !== null)
+        {
+            $sName = (string)call_user_func($this->cNameSanitizer, $sName, $sVarName, $this->sUploadFieldId);
+        }
+        $xFile->setName($sName);
         // All's right, save the file for copy.
         $this->aAllFiles[] = ['temp' => $xHttpFile, 'user' => $xFile];
         return $xFile;
@@ -373,7 +370,7 @@ class UploadManager
         {
             $xFilesystem->delete($sUploadTempFile);
         }
-        catch(FilesystemException $e){}
+        catch(FilesystemException $e){/* Not a big deal if the file cannot be deleted. */}
         return $aUserFiles;
     }
 }
