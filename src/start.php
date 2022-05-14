@@ -83,17 +83,10 @@ function registerUpload()
     $di->set($sEventListenerKey, function() {
         return new class implements ConfigListenerInterface
         {
-            public function onChanges(Config $xConfig)
-            {
-                if($xConfig->getOption('core.upload.enabled'))
-                {
-                    register(jaxon()->di());
-                }
-            }
-
             public function onChange(Config $xConfig, string $sName)
             {
-                if($sName === 'core.upload.enabled' && $xConfig->getOption('core.upload.enabled'))
+                $sConfigKey = 'core.upload.enabled';
+                if(($sName === $sConfigKey || $sName === '') && $xConfig->getOption($sConfigKey))
                 {
                     register(jaxon()->di());
                 }
