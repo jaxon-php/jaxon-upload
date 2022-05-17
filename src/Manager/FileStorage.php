@@ -83,6 +83,56 @@ class FileStorage
             return empty($xOptions) ? new LocalFilesystemAdapter($sRootDir) :
                 new LocalFilesystemAdapter($sRootDir, $xOptions);
         });
+
+        // In memory file system adapter
+        $this->registerAdapter('memory', function() {
+            return new \League\Flysystem\InMemory\InMemoryFilesystemAdapter();
+        });
+
+        // AWS S3 file system adapter
+        $this->registerAdapter('aws-s3', function(string $sRootDir, array $aOptions) {
+            /** @var \Aws\S3\S3ClientInterface $client */
+            $client = new \Aws\S3\S3Client($aOptions['client'] ?? []);
+            return new \League\Flysystem\AwsS3V3\AwsS3V3Adapter($client, $aOptions['bucket'] ?? '', $sRootDir);
+        });
+
+        // Async AWS S3 file system adapter
+        $this->registerAdapter('async-aws-s3', function(string $sRootDir, array $aOptions) {
+            $client = isset($aOptions['client']) ? new \AsyncAws\S3\S3Client($aOptions['client']) : new \AsyncAws\S3\S3Client();
+            return new \League\Flysystem\AsyncAwsS3\AsyncAwsS3Adapter($client, $aOptions['bucket'] ?? '', $sRootDir);
+        });
+
+        // Google Cloud file system adapter
+        $this->registerAdapter('google-cloud', function(string $sRootDir, array $aOptions) {
+            $storageClient = new \Google\Cloud\Storage\StorageClient($aOptions['client'] ?? []);
+            $bucket = $storageClient->bucket($aOptions['bucket'] ?? '');
+            return new \League\Flysystem\AzureBlobStorage\GoogleCloudStorageAdapter($bucket, $sRootDir);
+        });
+
+        // Microsoft Azure file system adapter
+        $this->registerAdapter('azure-blob', function(string $sRootDir, array $aOptions) {
+            $client = \MicrosoftAzure\Storage\Blob\BlobRestProxy::createBlobService($aOptions['dsn']);
+            return new \League\Flysystem\AzureBlobStorage\AzureBlobStorageAdapter($client, $aOptions['container'], $sRootDir);
+        });
+
+        // FTP file system adapter
+        $this->registerAdapter('ftp', function(string $sRootDir, array $aOptions) {
+            $aOptions['root'] = $sRootDir;
+            $xOptions = \League\Flysystem\Ftp\FtpConnectionOptions::fromArray($aOptions);
+            return new \League\Flysystem\Ftp\FtpAdapter($xOptions);
+        });
+
+        // SFTP V2 file system adapter
+        $this->registerAdapter('sftp-v2', function(string $sRootDir, array $aOptions) {
+            $provider = new \League\Flysystem\PhpseclibV2\SftpConnectionProvider(...$aOptions);
+            return new \League\Flysystem\PhpseclibV2\SftpAdapter($provider, $sRootDir);
+        });
+
+        // SFTP V3 file system adapter
+        $this->registerAdapter('sftp-v3', function(string $sRootDir, array $aOptions) {
+            $provider = new \League\Flysystem\PhpseclibV3\SftpConnectionProvider(...$aOptions);
+            return new \League\Flysystem\PhpseclibV3\SftpAdapter($provider, $sRootDir);
+        });
     }
 
     /**
