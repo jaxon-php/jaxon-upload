@@ -44,6 +44,11 @@ class FileStorage
     protected $aAdapters = [];
 
     /**
+     * @var array
+     */
+    protected $aFilesystems = [];
+
+    /**
      * The constructor
      *
      * @param ConfigManager $xConfigManager
@@ -81,25 +86,31 @@ class FileStorage
     }
 
     /**
-     * @param string $sFieldId
+     * @param string $sField
      *
      * @return Filesystem
      * @throws RequestException
      */
-    public function filesystem(string $sFieldId = ''): Filesystem
+    public function filesystem(string $sField = ''): Filesystem
     {
-        $sFieldId = trim($sFieldId);
+        $sField = trim($sField);
+        if(isset($this->aFilesystems[$sField]))
+        {
+            return $this->aFilesystems[$sField];
+        }
+
         // Default upload dir
         $sStorage = $this->xConfigManager->getOption('upload.default.storage', 'local');
         $sRootDir = $this->xConfigManager->getOption('upload.default.dir', '');
         $aOptions = $this->xConfigManager->getOption('upload.default.options');
-        $sConfigKey = "upload.files.$sFieldId";
-        if($sFieldId !== '' && $this->xConfigManager->hasOption($sConfigKey))
+        $sConfigKey = "upload.files.$sField";
+        if($sField !== '' && $this->xConfigManager->hasOption($sConfigKey))
         {
             $sStorage = $this->xConfigManager->getOption("$sConfigKey.storage", $sStorage);
             $sRootDir = $this->xConfigManager->getOption("$sConfigKey.dir", $sRootDir);
             $aOptions = $this->xConfigManager->getOption("$sConfigKey.options", $aOptions);
         }
+
         if(!is_string($sRootDir))
         {
             throw new RequestException($this->xTranslator->trans('errors.upload.dir'));
@@ -109,6 +120,7 @@ class FileStorage
             throw new RequestException($this->xTranslator->trans('errors.upload.adapter'));
         }
 
-        return new Filesystem(call_user_func($this->aAdapters[$sStorage], $sRootDir, $aOptions));
+        $this->aFilesystems[$sField] = new Filesystem(call_user_func($this->aAdapters[$sStorage], $sRootDir, $aOptions));
+        return $this->aFilesystems[$sField];
     }
 }
