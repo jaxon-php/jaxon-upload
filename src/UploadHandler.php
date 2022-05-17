@@ -18,6 +18,7 @@ use Jaxon\App\I18n\Translator;
 use Jaxon\Exception\RequestException;
 use Jaxon\Request\Upload\UploadHandlerInterface;
 use Jaxon\Response\Manager\ResponseManager;
+use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ServerRequestInterface;
@@ -36,6 +37,13 @@ class UploadHandler implements UploadHandlerInterface
      * @var UploadManager
      */
     protected $xUploadManager;
+
+    /**
+     * The file storage
+     *
+     * @var FileStorage
+     */
+    protected $xFileStorage;
 
     /**
      * The response manager
@@ -81,14 +89,16 @@ class UploadHandler implements UploadHandlerInterface
      * The constructor
      *
      * @param UploadManager $xUploadManager
+     * @param FileStorage $xFileStorage
      * @param ResponseManager $xResponseManager
      * @param Translator $xTranslator
      * @param Psr17Factory $xPsr17Factory
      */
-    public function __construct(UploadManager $xUploadManager, ResponseManager $xResponseManager,
-        Translator $xTranslator, Psr17Factory $xPsr17Factory)
+    public function __construct(UploadManager $xUploadManager, FileStorage $xFileStorage,
+        ResponseManager $xResponseManager, Translator $xTranslator, Psr17Factory $xPsr17Factory)
     {
         $this->xUploadManager = $xUploadManager;
+        $this->xFileStorage = $xFileStorage;
         $this->xResponseManager = $xResponseManager;
         $this->xTranslator = $xTranslator;
         $this->xPsr17Factory = $xPsr17Factory;
@@ -208,5 +218,16 @@ class UploadHandler implements UploadHandlerInterface
             $this->xResponseManager->append(new UploadResponse($this->xPsr17Factory, '', $e->getMessage()));
         }
         return true;
+    }
+
+    /**
+     * @param string $sStorage
+     * @param Closure $cFactory
+     *
+     * @return void
+     */
+    public function registerStorageAdapter(string $sStorage, Closure $cFactory)
+    {
+        $this->xFileStorage->registerAdapter($sStorage, $cFactory);
     }
 }

@@ -48,17 +48,19 @@ function register(Container $di, bool $bForce = false)
     });
     // File storage
     $di->set(FileStorage::class, function($c) {
-        return new FileStorage($c->g(ConfigManager::class), $c->g(Translator::class));
+        $xFileStorage = new FileStorage($c->g(ConfigManager::class), $c->g(Translator::class));
+        $xFileStorage->registerAdapters();
+        return $xFileStorage;
     });
     // File upload manager
     $di->set(UploadManager::class, function($c) {
-        return new UploadManager($c->g(FileNameInterface::class), $c->g(ConfigManager::class),
-            $c->g(Validator::class), $c->g(Translator::class), $c->g(FileStorage::class));
+        return new UploadManager($c->g(FileStorage::class), $c->g(FileNameInterface::class),
+            $c->g(ConfigManager::class), $c->g(Validator::class), $c->g(Translator::class));
     });
     // File upload plugin
     $di->set(UploadHandler::class, function($c) {
-        return new UploadHandler($c->g(UploadManager::class), $c->g(ResponseManager::class),
-            $c->g(Translator::class), $c->g(Psr17Factory::class));
+        return new UploadHandler($c->g(UploadManager::class), $c->g(FileStorage::class),
+            $c->g(ResponseManager::class), $c->g(Translator::class), $c->g(Psr17Factory::class));
     });
     // Set alias on the interface
     $di->alias(UploadHandlerInterface::class, UploadHandler::class);
