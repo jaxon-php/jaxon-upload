@@ -27,6 +27,7 @@ use Closure;
 
 use function call_user_func;
 use function is_array;
+use function jaxon;
 use function json_decode;
 use function json_encode;
 
@@ -161,6 +162,7 @@ class UploadManager
         }
         catch(FilesystemException $e)
         {
+            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
     }
@@ -264,6 +266,7 @@ class UploadManager
         }
         catch(FilesystemException $e)
         {
+            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
         return $aUserFiles;
@@ -298,6 +301,7 @@ class UploadManager
         }
         catch(FilesystemException $e)
         {
+            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
         return $sTempFile;
@@ -330,6 +334,7 @@ class UploadManager
         }
         catch(FilesystemException $e)
         {
+            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
     }
@@ -368,7 +373,10 @@ class UploadManager
         {
             $xFileSystem->delete($sUploadTempFile);
         }
-        catch(FilesystemException $e){/* Not a big deal if the file cannot be deleted. */}
+        catch(FilesystemException $e)
+        {
+            jaxon()->logger()->warning('Filesystem error', ['message' => $e->getMessage()]);
+        }
         return $aUserFiles;
     }
 }
