@@ -17,7 +17,9 @@ use Jaxon\Utils\Config\Config;
 use Nyholm\Psr7\Factory\Psr17Factory;
 
 use function bin2hex;
+use function jaxon;
 use function random_bytes;
+use function realpath;
 
 /**
  * @param Container $di
@@ -59,6 +61,14 @@ function register(Container $di, bool $bForce = false)
     });
     // File upload plugin
     $di->set(UploadHandler::class, function($c) {
+        // Translation directory
+        $sTranslationDir = realpath(__DIR__ . '/../../translations');
+        // Load the upload translations
+        $xTranslator = $c->g(Translator::class);
+        $xTranslator->loadTranslations($sTranslationDir . '/en/upload.php', 'en');
+        $xTranslator->loadTranslations($sTranslationDir . '/fr/upload.php', 'fr');
+        $xTranslator->loadTranslations($sTranslationDir . '/es/upload.php', 'es');
+
         return new UploadHandler($c->g(UploadManager::class), $c->g(FileStorage::class),
             $c->g(ResponseManager::class), $c->g(Translator::class), $c->g(Psr17Factory::class));
     });
@@ -80,8 +90,8 @@ function registerUpload()
         return;
     }
 
-    // The annotation package is installed, register the real annotation reader,
-    // but only if the feature is activated in the config.
+    // The upload package is installed, the upload manager must be registered,
+    // but only when the feature is activated in the config.
     $di->set($sEventListenerKey, function() {
         return new class implements ConfigListenerInterface
         {
