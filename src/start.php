@@ -2,11 +2,11 @@
 
 namespace Jaxon\Upload;
 
+use Jaxon\Di\Container;
 use Jaxon\App\Config\ConfigEventManager;
 use Jaxon\App\Config\ConfigListenerInterface;
 use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
-use Jaxon\Di\Container;
 use Jaxon\Request\Upload\UploadHandlerInterface;
 use Jaxon\Response\Manager\ResponseManager;
 use Jaxon\Upload\Manager\FileNameInterface;
@@ -16,8 +16,10 @@ use Jaxon\Upload\Manager\Validator;
 use Jaxon\Utils\Config\Config;
 use Nyholm\Psr7\Factory\Psr17Factory;
 
+use function Jaxon\jaxon;
 use function bin2hex;
 use function random_bytes;
+use function realpath;
 
 /**
  * @param Container $di
@@ -48,17 +50,27 @@ function register(Container $di, bool $bForce = false)
     });
     // File storage
     $di->set(FileStorage::class, function($c) {
-        return new FileStorage($c->g(ConfigManager::class), $c->g(Translator::class));
+        $xFileStorage = new FileStorage($c->g(ConfigManager::class), $c->g(Translator::class));
+        $xFileStorage->registerAdapters();
+        return $xFileStorage;
     });
     // File upload manager
     $di->set(UploadManager::class, function($c) {
-        return new UploadManager($c->g(FileNameInterface::class), $c->g(ConfigManager::class),
-            $c->g(Validator::class), $c->g(Translator::class), $c->g(FileStorage::class));
+        return new UploadManager($c->g(FileStorage::class), $c->g(FileNameInterface::class),
+            $c->g(ConfigManager::class), $c->g(Validator::class), $c->g(Translator::class));
     });
     // File upload plugin
     $di->set(UploadHandler::class, function($c) {
-        return new UploadHandler($c->g(UploadManager::class), $c->g(ResponseManager::class),
-            $c->g(Translator::class), $c->g(Psr17Factory::class));
+        // Translation directory
+        $sTranslationDir = realpath(__DIR__ . '/../../translations');
+        // Load the upload translations
+        $xTranslator = $c->g(Translator::class);
+        $xTranslator->loadTranslations($sTranslationDir . '/en/upload.php', 'en');
+        $xTranslator->loadTranslations($sTranslationDir . '/fr/upload.php', 'fr');
+        $xTranslator->loadTranslations($sTranslationDir . '/es/upload.php', 'es');
+
+        return new UploadHandler($c->g(UploadManager::class), $c->g(FileStorage::class),
+            $c->g(ResponseManager::class), $c->g(Translator::class), $c->g(Psr17Factory::class));
     });
     // Set alias on the interface
     $di->alias(UploadHandlerInterface::class, UploadHandler::class);
@@ -78,8 +90,8 @@ function registerUpload()
         return;
     }
 
-    // The annotation package is installed, register the real annotation reader,
-    // but only if the feature is activated in the config.
+    // The upload package is installed, the upload manager must be registered,
+    // but only when the feature is activated in the config.
     $di->set($sEventListenerKey, function() {
         return new class implements ConfigListenerInterface
         {

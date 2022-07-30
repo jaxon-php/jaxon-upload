@@ -25,6 +25,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 use Closure;
 
+use function Jaxon\jaxon;
 use function call_user_func;
 use function is_array;
 use function json_decode;
@@ -32,6 +33,20 @@ use function json_encode;
 
 class UploadManager
 {
+    /**
+     * The file storage
+     *
+     * @var FileStorage
+     */
+    protected $xFileStorage;
+
+    /**
+     * The file and dir name generator
+     *
+     * @var FileNameInterface
+     */
+    protected $xFileName;
+
     /**
      * @var ConfigManager
      */
@@ -48,20 +63,6 @@ class UploadManager
      * @var Translator
      */
     protected $xTranslator;
-
-    /**
-     * The file and dir name generator
-     *
-     * @var FileNameInterface
-     */
-    protected $xFileName;
-
-    /**
-     * The file storage
-     *
-     * @var FileStorage
-     */
-    protected $xFileStorage;
 
     /**
      * The id of the upload field in the form
@@ -87,20 +88,20 @@ class UploadManager
     /**
      * The constructor
      *
+     * @param FileStorage $xFileStorage
      * @param FileNameInterface $xFileName
      * @param ConfigManager $xConfigManager
      * @param Validator $xValidator
      * @param Translator $xTranslator
-     * @param FileStorage $xFileStorage
      */
-    public function __construct(FileNameInterface $xFileName, ConfigManager $xConfigManager,
-        Validator $xValidator, Translator $xTranslator, FileStorage $xFileStorage)
+    public function __construct(FileStorage $xFileStorage, FileNameInterface $xFileName,
+        ConfigManager $xConfigManager, Validator $xValidator, Translator $xTranslator)
     {
+        $this->xFileStorage = $xFileStorage;
         $this->xFileName = $xFileName;
         $this->xConfigManager = $xConfigManager;
         $this->xValidator = $xValidator;
         $this->xTranslator = $xTranslator;
-        $this->xFileStorage = $xFileStorage;
         // This feature is not yet implemented
         $this->setUploadFieldId('');
     }
@@ -161,6 +162,7 @@ class UploadManager
         }
         catch(FilesystemException $e)
         {
+            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
     }
@@ -168,51 +170,48 @@ class UploadManager
     /**
      * Get the path to the upload dir
      *
-     * @param string $sFieldId    The filename
+     * @param string $sField
      *
-     * @return array
+     * @return string
      * @throws RequestException
      */
-    private function getUploadDir(string $sFieldId): array
+    private function getUploadDir(string $sField): string
     {
-        $xFilesystem = $this->xFileStorage->filesystem($sFieldId);
-        return [$xFilesystem, $this->_makeUploadDir($xFilesystem, $this->randomName() . '/')];
+        return $this->_makeUploadDir($this->xFileStorage->filesystem($sField), $this->randomName() . '/');
     }
 
     /**
      * Get the path to the upload temp dir
      *
-     * @return array
+     * @return string
      * @throws RequestException
      */
-    private function getUploadTempDir(): array
+    private function getUploadTempDir(): string
     {
-        $xFilesystem = $this->xFileStorage->filesystem();
-        return [$xFilesystem, $this->_makeUploadDir($xFilesystem, 'tmp/')];
+        return $this->_makeUploadDir($this->xFileStorage->filesystem(), 'tmp/');
     }
 
     /**
      * Check uploaded files
      *
-     * @param Filesystem $xFilesystem
      * @param string $sUploadDir
-     * @param string $sVarName
+     * @param string $sField
      * @param UploadedFile $xHttpFile
      *
      * @return File
      * @throws RequestException
      */
-    private function makeUploadedFile(Filesystem $xFilesystem, string $sUploadDir, string $sVarName, UploadedFile $xHttpFile): File
+    private function makeUploadedFile(string $sUploadDir, string $sField, UploadedFile $xHttpFile): File
     {
         // Check the uploaded file validity
         if($xHttpFile->getError())
         {
-            throw new RequestException($this->xTranslator->trans('errors.upload.failed', ['name' => $sVarName]));
+            throw new RequestException($this->xTranslator->trans('errors.upload.failed', ['name' => $sField]));
         }
         // Set the user file data
-        $xFile = File::fromHttpFile($xFilesystem, $sUploadDir, $xHttpFile);
+        $xFile = File::fromHttpFile($this->xFileStorage->filesystem($sField), $sUploadDir, $xHttpFile);
         // Verify file validity (format, size)
-        if(!$this->xValidator->validateUploadedFile($sVarName, $xFile))
+        if(!$this->xValidator->validateUploadedFile($sField, $xFile))
         {
             throw new RequestException($this->xValidator->getErrorMessage());
         }
@@ -220,7 +219,7 @@ class UploadManager
         $sName = pathinfo($xHttpFile->getClientFilename(), PATHINFO_FILENAME);
         if($this->cNameSanitizer !== null)
         {
-            $sName = (string)call_user_func($this->cNameSanitizer, $sName, $sVarName, $this->sUploadFieldId);
+            $sName = (string)call_user_func($this->cNameSanitizer, $sName, $sField, $this->sUploadFieldId);
         }
         $xFile->setName($sName);
         // All's right, save the file for copy.
@@ -243,18 +242,18 @@ class UploadManager
 
         $aUserFiles = [];
         $this->aAllFiles = []; // A flat list of all uploaded files
-        foreach($aTempFiles as $sVarName => $aFiles)
+        foreach($aTempFiles as $sField => $aFiles)
         {
-            $aUserFiles[$sVarName] = [];
+            $aUserFiles[$sField] = [];
             // Get the path to the upload dir
-            [$xFilesystem, $sUploadDir] = $this->getUploadDir($sVarName);
+            $sUploadDir = $this->getUploadDir($sField);
             if(!is_array($aFiles))
             {
                 $aFiles = [$aFiles];
             }
             foreach($aFiles as $xHttpFile)
             {
-                $aUserFiles[$sVarName][] = $this->makeUploadedFile($xFilesystem, $sUploadDir, $sVarName, $xHttpFile);
+                $aUserFiles[$sField][] = $this->makeUploadedFile($sUploadDir, $sField, $xHttpFile);
             }
         }
         // Copy the uploaded files from the temp dir to the user dir
@@ -262,11 +261,12 @@ class UploadManager
         {
             foreach($this->aAllFiles as $aFiles)
             {
-                $aFiles['user']->filesystem()->write($aFiles['user']->path(), $aFiles['temp']->getStream()->getContents());
+                $aFiles['user']->filesystem()->write($aFiles['user']->path(), $aFiles['temp']->getStream());
             }
         }
         catch(FilesystemException $e)
         {
+            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
         return $aUserFiles;
@@ -284,23 +284,24 @@ class UploadManager
     {
         // Convert uploaded file to an array
         $aFiles = [];
-        foreach($aUserFiles as $sVarName => $aVarFiles)
+        foreach($aUserFiles as $sField => $aFieldFiles)
         {
-            $aFiles[$sVarName] = [];
-            foreach($aVarFiles as $aVarFile)
+            $aFiles[$sField] = [];
+            foreach($aFieldFiles as $aFieldFile)
             {
-                $aFiles[$sVarName][] = $aVarFile->toTempData();
+                $aFiles[$sField][] = $aFieldFile->toTempData();
             }
         }
         // Save upload data in a temp file
-        [$xFilesystem, $sUploadDir] = $this->getUploadTempDir();
+        $sUploadDir = $this->getUploadTempDir();
         $sTempFile = $this->randomName();
         try
         {
-            $xFilesystem->write($sUploadDir . $sTempFile . '.json', json_encode($aFiles));
+            $this->xFileStorage->filesystem()->write($sUploadDir . $sTempFile . '.json', json_encode($aFiles));
         }
         catch(FilesystemException $e)
         {
+            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
         return $sTempFile;
@@ -311,28 +312,29 @@ class UploadManager
      *
      * @param string $sTempFile
      *
-     * @return array
+     * @return string
      * @throws RequestException
      */
-    private function getUploadTempFile(string $sTempFile): array
+    private function getUploadTempFile(string $sTempFile): string
     {
         // Verify file name validity
         if(!$this->xValidator->validateTempFileName($sTempFile))
         {
             throw new RequestException($this->xTranslator->trans('errors.upload.invalid'));
         }
-        [$xFilesystem, $sUploadDir] = $this->getUploadTempDir();
+        $sUploadDir = $this->getUploadTempDir();
         $sUploadTempFile = $sUploadDir . $sTempFile . '.json';
         try
         {
-            if($xFilesystem->visibility($sUploadTempFile) !== Visibility::PUBLIC)
+            if($this->xFileStorage->filesystem()->visibility($sUploadTempFile) !== Visibility::PUBLIC)
             {
                 throw new RequestException($this->xTranslator->trans('errors.upload.access'));
             }
-            return [$xFilesystem, $sUploadTempFile];
+            return $sUploadTempFile;
         }
         catch(FilesystemException $e)
         {
+            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
     }
@@ -347,30 +349,34 @@ class UploadManager
      */
     public function readFromTempFile(string $sTempFile): array
     {
+        $xFileSystem = $this->xFileStorage->filesystem();
         // Upload temp file
-        [$xFilesystem, $sUploadTempFile] = $this->getUploadTempFile($sTempFile);
+        $sUploadTempFile = $this->getUploadTempFile($sTempFile);
         try
         {
-            $aFiles = json_decode($xFilesystem->read($sUploadTempFile), true);
+            $aFiles = json_decode($xFileSystem->read($sUploadTempFile), true);
         }
         catch(FilesystemException $e)
         {
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
         $aUserFiles = [];
-        foreach($aFiles as $sVarName => $aVarFiles)
+        foreach($aFiles as $sField => $aFieldFiles)
         {
-            $aUserFiles[$sVarName] = [];
-            foreach($aVarFiles as $aVarFile)
+            $aUserFiles[$sField] = [];
+            foreach($aFieldFiles as $aFieldFile)
             {
-                $aUserFiles[$sVarName][] = File::fromTempFile($xFilesystem, $aVarFile);
+                $aUserFiles[$sField][] = File::fromTempFile($this->xFileStorage->filesystem($sField), $aFieldFile);
             }
         }
         try
         {
-            $xFilesystem->delete($sUploadTempFile);
+            $xFileSystem->delete($sUploadTempFile);
         }
-        catch(FilesystemException $e){/* Not a big deal if the file cannot be deleted. */}
+        catch(FilesystemException $e)
+        {
+            jaxon()->logger()->warning('Filesystem error', ['message' => $e->getMessage()]);
+        }
         return $aUserFiles;
     }
 }

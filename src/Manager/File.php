@@ -96,7 +96,7 @@ class File implements FileInterface
      * Create an instance of this class using data from a temp file
      *
      * @param Filesystem $xFilesystem
-     * @param array $aFile    The uploaded file data
+     * @param array $aFile The uploaded file data
      *
      * @return File
      */
