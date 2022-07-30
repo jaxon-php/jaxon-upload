@@ -25,9 +25,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 use Closure;
 
+use function Jaxon\jaxon;
 use function call_user_func;
 use function is_array;
-use function jaxon;
 use function json_decode;
 use function json_encode;
 

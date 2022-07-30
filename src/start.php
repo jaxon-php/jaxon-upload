@@ -2,11 +2,11 @@
 
 namespace Jaxon\Upload;
 
+use Jaxon\Di\Container;
 use Jaxon\App\Config\ConfigEventManager;
 use Jaxon\App\Config\ConfigListenerInterface;
 use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
-use Jaxon\Di\Container;
 use Jaxon\Request\Upload\UploadHandlerInterface;
 use Jaxon\Response\Manager\ResponseManager;
 use Jaxon\Upload\Manager\FileNameInterface;
@@ -16,8 +16,8 @@ use Jaxon\Upload\Manager\Validator;
 use Jaxon\Utils\Config\Config;
 use Nyholm\Psr7\Factory\Psr17Factory;
 
+use function Jaxon\jaxon;
 use function bin2hex;
-use function jaxon;
 use function random_bytes;
 use function realpath;
 
