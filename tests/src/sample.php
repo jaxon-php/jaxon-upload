@@ -2,6 +2,8 @@
 
 use Jaxon\Response\Response;
 
+use function Jaxon\jaxon;
+
 class Sample
 {
     public function myMethod(): Response
