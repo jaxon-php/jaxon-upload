@@ -1,4 +1,4 @@
-[![Build Status](https://api.travis-ci.com/jaxon-php/jaxon-upload.svg?branch=main)](https://app.travis-ci.com/github/jaxon-php/jaxon-upload)
+[![Build Status](https://github.com/jaxon-php/jaxon-upload/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/jaxon-php/jaxon-upload/actions)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jaxon-php/jaxon-upload/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/jaxon-php/jaxon-upload/?branch=main)
 [![StyleCI](https://styleci.io/repos/491279814/shield?branch=main)](https://styleci.io/repos/491279814)
 [![codecov](https://codecov.io/gh/jaxon-php/jaxon-upload/branch/main/graph/badge.svg?token=8KD4KLQTXO)](https://codecov.io/gh/jaxon-php/jaxon-upload)
