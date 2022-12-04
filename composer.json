@@ -35,6 +35,14 @@
             "Jaxon\\Upload\\Tests\\": "tests/"
         }
     },
+    "scripts": {
+        "test": [
+            "@clearCache",
+            "@putenv XDEBUG_MODE=coverage",
+            "vendor/bin/phpunit"
+        ],
+        "clearCache": "rm -rf cache/*"
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }
