@@ -75,16 +75,18 @@ class File implements FileInterface
      * Create an instance of this class using data from an uploaded file.
      *
      * @param Filesystem $xFilesystem
-     * @param string $sUploadDir
      * @param UploadedFile $xHttpFile
+     * @param string $sUploadDir
+     * @param string $sName
      *
      * @return File
      */
-    public static function fromHttpFile(Filesystem $xFilesystem, string $sUploadDir, UploadedFile $xHttpFile): File
+    public static function fromHttpFile(Filesystem $xFilesystem, UploadedFile $xHttpFile, string $sUploadDir, string $sName): File
     {
         $xFile = new File();
         $xFile->xFilesystem = $xFilesystem;
         $xFile->sType = $xHttpFile->getClientMediaType();
+        $xFile->sName = $sName;
         $xFile->sFilename = $xHttpFile->getClientFilename();
         $xFile->sExtension = pathinfo($xFile->sFilename, PATHINFO_EXTENSION);
         $xFile->nSize = $xHttpFile->getSize();
@@ -128,14 +130,6 @@ class File implements FileInterface
             'size' => $this->nSize,
             'path' => $this->sPath,
         ];
-    }
-
-    /**
-     * @param string $sName
-     */
-    public function setName(string $sName): void
-    {
-        $this->sName = $sName;
     }
 
     /**

@@ -194,34 +194,36 @@ class UploadManager
     /**
      * Check uploaded files
      *
+     * @param UploadedFile $xHttpFile
      * @param string $sUploadDir
      * @param string $sField
-     * @param UploadedFile $xHttpFile
      *
      * @return File
      * @throws RequestException
      */
-    private function makeUploadedFile(string $sUploadDir, string $sField, UploadedFile $xHttpFile): File
+    private function makeUploadedFile(UploadedFile $xHttpFile, string $sUploadDir, string $sField): File
     {
         // Check the uploaded file validity
         if($xHttpFile->getError())
         {
             throw new RequestException($this->xTranslator->trans('errors.upload.failed', ['name' => $sField]));
         }
-        // Set the user file data
-        $xFile = File::fromHttpFile($this->xFileStorage->filesystem($sField), $sUploadDir, $xHttpFile);
-        // Verify file validity (format, size)
-        if(!$this->xValidator->validateUploadedFile($sField, $xFile))
-        {
-            throw new RequestException($this->xValidator->getErrorMessage());
-        }
+
         // Filename without the extension. Needs to be sanitized.
         $sName = pathinfo($xHttpFile->getClientFilename(), PATHINFO_FILENAME);
         if($this->cNameSanitizer !== null)
         {
             $sName = (string)call_user_func($this->cNameSanitizer, $sName, $sField, $this->sUploadFieldId);
         }
-        $xFile->setName($sName);
+
+        // Set the user file data
+        $xFile = File::fromHttpFile($this->xFileStorage->filesystem($sField), $xHttpFile, $sUploadDir, $sName);
+        // Verify file validity (format, size)
+        if(!$this->xValidator->validateUploadedFile($sField, $xFile))
+        {
+            throw new RequestException($this->xValidator->getErrorMessage());
+        }
+
         // All's right, save the file for copy.
         $this->aAllFiles[] = ['temp' => $xHttpFile, 'user' => $xFile];
         return $xFile;
@@ -253,7 +255,7 @@ class UploadManager
             }
             foreach($aFiles as $xHttpFile)
             {
-                $aUserFiles[$sField][] = $this->makeUploadedFile($sUploadDir, $sField, $xHttpFile);
+                $aUserFiles[$sField][] = $this->makeUploadedFile($xHttpFile, $sUploadDir, $sField);
             }
         }
         // Copy the uploaded files from the temp dir to the user dir
