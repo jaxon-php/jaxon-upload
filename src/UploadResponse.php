@@ -2,8 +2,8 @@
 
 namespace Jaxon\Upload;
 
+use Jaxon\Plugin\ResponsePlugin;
 use Jaxon\Response\ResponseInterface;
-use Jaxon\Response\Traits\CommandTrait;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
@@ -14,7 +14,9 @@ use function json_encode;
 
 class UploadResponse implements ResponseInterface
 {
-    use CommandTrait;
+    use \Jaxon\Response\Traits\CommandTrait;
+    use \Jaxon\Response\Traits\DomTrait;
+    use \Jaxon\Response\Traits\JsTrait;
 
     /**
      * @var Psr17Factory
@@ -127,5 +129,48 @@ class UploadResponse implements ResponseInterface
         return $this->xPsr17Factory->createResponse(($this->sUploadedFile) ? 200 : 500)
             ->withHeader('content-type', $this->getContentType())
             ->withBody(Stream::create($this->getOutput()));
+    }
+
+    /**
+     * Empty method, just to have the ResponseInterface methods implemented.
+     *
+     * @param array $aAttributes
+     * @param mixed $mData
+     *
+     * @return ResponseInterface
+     */
+    public function addCommand(array $aAttributes, $mData): ResponseInterface
+    {
+        return $this;
+    }
+
+    /**
+     * Empty method, just to have the ResponseInterface methods implemented.
+     *
+     * @param string $sName
+     * @param array $aAttributes
+     * @param mixed $mData
+     * @param bool $bRemoveEmpty
+     *
+     * @return ResponseInterface
+     */
+    protected function _addCommand(string $sName, array $aAttributes,
+        $mData, bool $bRemoveEmpty = false): ResponseInterface
+    {
+        return $this;
+    }
+
+    /**
+     * Empty method, just to have the ResponseInterface methods implemented.
+     *
+     * @param ResponsePlugin $xPlugin
+     * @param array $aAttributes
+     * @param mixed $mData
+     *
+     * @return ResponseInterface
+     */
+    public function addPluginCommand(ResponsePlugin $xPlugin, array $aAttributes, $mData): ResponseInterface
+    {
+        return $this;
     }
 }
