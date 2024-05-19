@@ -14,7 +14,7 @@
     },
     "require": {
         "ext-json": "*",
-        "jaxon-php/jaxon-core": "^4.0",
+        "jaxon-php/jaxon-core": "v5.x-dev",
         "league/flysystem": "^3.0|^2.2"
     },
     "require-dev": {
