@@ -2,6 +2,7 @@
 
 namespace Jaxon\Upload;
 
+use Jaxon\App\Ajax;
 use Jaxon\Di\Container;
 use Jaxon\App\Config\ConfigEventManager;
 use Jaxon\App\Config\ConfigListenerInterface;
@@ -16,7 +17,6 @@ use Jaxon\Upload\Manager\Validator;
 use Jaxon\Utils\Config\Config;
 use Nyholm\Psr7\Factory\Psr17Factory;
 
-use function Jaxon\jaxon;
 use function bin2hex;
 use function random_bytes;
 use function realpath;
@@ -83,7 +83,7 @@ function register(Container $di, bool $bForce = false)
  */
 function registerUpload()
 {
-    $di = jaxon()->di();
+    $di = Ajax::getInstance()->di();
     $sEventListenerKey = UploadHandler::class . '\\ConfigListener';
     if($di->h($sEventListenerKey))
     {
@@ -100,7 +100,7 @@ function registerUpload()
                 $sConfigKey = 'core.upload.enabled';
                 if(($sName === $sConfigKey || $sName === '') && $xConfig->getOption($sConfigKey))
                 {
-                    register(jaxon()->di());
+                    register(Ajax::getInstance()->di());
                 }
             }
         };
