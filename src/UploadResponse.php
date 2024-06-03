@@ -2,8 +2,8 @@
 
 namespace Jaxon\Upload;
 
-use Jaxon\App\Dialog\DialogManager;
-use Jaxon\Response\ResponseInterface;
+use Jaxon\Response\AbstractResponse;
+use Jaxon\Response\ResponseManager;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
@@ -11,19 +11,9 @@ use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use function addslashes;
 use function array_reduce;
 use function json_encode;
-use function Jaxon\jaxon;
 
-class UploadResponse implements ResponseInterface
+class UploadResponse extends AbstractResponse
 {
-    use \Jaxon\Response\Traits\CommandTrait;
-    use \Jaxon\Response\Traits\HtmlDomTrait;
-    use \Jaxon\Response\Traits\ScriptTrait;
-
-    /**
-     * @var Psr17Factory
-     */
-    protected $xPsr17Factory;
-
     /**
      * The path to the uploaded file
      *
@@ -32,31 +22,17 @@ class UploadResponse implements ResponseInterface
     private $sUploadedFile = '';
 
     /**
-     * The error message
-     *
-     * @var string
-     */
-    private $sErrorMessage = '';
-
-    /**
-     * The debug messages
-     *
-     * @var array
-     */
-    private $aDebugMessages = [];
-
-    /**
      * The constructor
      *
+     * @param ResponseManager $xManager
      * @param Psr17Factory $xPsr17Factory
      * @param string $sUploadedFile
-     * @param string $sErrorMessage
      */
-    public function __construct(Psr17Factory $xPsr17Factory, string $sUploadedFile, string $sErrorMessage = '')
+    public function __construct(ResponseManager $xManager, Psr17Factory $xPsr17Factory,
+        string $sUploadedFile = '')
     {
-        $this->xPsr17Factory = $xPsr17Factory;
+        parent::__construct($xManager, $xPsr17Factory);
         $this->sUploadedFile = $sUploadedFile;
-        $this->sErrorMessage = $sErrorMessage;
     }
 
     /**
@@ -65,26 +41,6 @@ class UploadResponse implements ResponseInterface
     public function getContentType(): string
     {
         return 'text/html';
-    }
-
-    /**
-     * @return DialogManager
-     */
-    protected function dialog(): DialogManager
-    {
-        return jaxon()->di()->g(DialogManager::class);
-    }
-
-    /**
-     * Convert to string
-     *
-     * @param mixed $xData
-     *
-     * @return string
-     */
-    protected function str($xData): string
-    {
-        return trim((string)$xData, " \t\n");
     }
 
     /**
@@ -98,33 +54,15 @@ class UploadResponse implements ResponseInterface
     }
 
     /**
-     * Get the error message
-     *
-     * @return string
-     */
-    public function getErrorMessage(): string
-    {
-        return $this->sErrorMessage;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function debug(string $sMessage): ResponseInterface
-    {
-        $this->aDebugMessages[] = $sMessage;
-        return $this;
-    }
-
-    /**
      * @inheritDoc
      */
     public function getOutput(): string
     {
-        $sResult = json_encode(($this->sUploadedFile) ?
+        $aResult = ($this->sUploadedFile) ?
             ['code' => 'success', 'upl' => $this->sUploadedFile] :
-            ['code' => 'error', 'msg' => $this->sErrorMessage]) . ';';
-        $sConsoleLog = array_reduce($this->aDebugMessages, function($sJsLog, $sMessage) {
+            ['code' => 'error', 'msg' => $this->getErrorMessage()];
+        $aMessages = $this->xManager->getDebugMessages();
+        $sMessages = array_reduce($aMessages, function($sJsLog, $sMessage) {
             return "$sJsLog\n\t" . 'console.log("' . addslashes($sMessage) . '");';
         }, '');
 
@@ -135,7 +73,8 @@ class UploadResponse implements ResponseInterface
 <h1>HTTP Upload for Jaxon</h1>
 </body>
 <script>
-    res = ' . $sResult . $sConsoleLog . '
+    res = ' . json_encode($aResult) . ';
+    // Debug messages ' . $sMessages . '
 </script>
 </html>';
     }

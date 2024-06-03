@@ -17,16 +17,16 @@ namespace Jaxon\Upload;
 use Jaxon\App\I18n\Translator;
 use Jaxon\Exception\RequestException;
 use Jaxon\Request\Upload\UploadHandlerInterface;
-use Jaxon\Response\Manager\ResponseManager;
+use Jaxon\Response\ResponseManager;
 use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ServerRequestInterface;
-
 use Closure;
 use Exception;
 
 use function count;
+use function is_array;
 use function trim;
 
 class UploadHandler implements UploadHandlerInterface
@@ -211,11 +211,14 @@ class UploadHandler implements UploadHandlerInterface
             // Copy the uploaded files from the HTTP request, and create the temp file.
             $this->aUserFiles = $this->xUploadManager->readFromHttpData($xRequest);
             $sTempFile = $this->xUploadManager->saveToTempFile($this->aUserFiles);
-            $this->xResponseManager->append(new UploadResponse($this->xPsr17Factory, $sTempFile));
+            $this->xResponseManager->setResponse(new UploadResponse($this->xResponseManager,
+                $this->xPsr17Factory, $sTempFile));
         }
         catch(Exception $e)
         {
-            $this->xResponseManager->append(new UploadResponse($this->xPsr17Factory, '', $e->getMessage()));
+            $this->xResponseManager->setErrorMessage($e->getMessage());
+            $this->xResponseManager->setResponse(new UploadResponse($this->xResponseManager,
+                $this->xPsr17Factory));
         }
         return true;
     }

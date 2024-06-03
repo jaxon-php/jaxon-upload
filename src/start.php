@@ -9,7 +9,7 @@ use Jaxon\App\Config\ConfigListenerInterface;
 use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
 use Jaxon\Request\Upload\UploadHandlerInterface;
-use Jaxon\Response\Manager\ResponseManager;
+use Jaxon\Response\ResponseManager;
 use Jaxon\Upload\Manager\FileNameInterface;
 use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
