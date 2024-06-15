@@ -2,11 +2,11 @@
 
 namespace Jaxon\Upload;
 
+use Jaxon\Plugin\Manager\PluginManager;
+use Jaxon\Plugin\Response\Psr\PsrPlugin;
 use Jaxon\Response\AbstractResponse;
 use Jaxon\Response\ResponseManager;
-use Nyholm\Psr7\Factory\Psr17Factory;
-use Nyholm\Psr7\Stream;
-use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
+use Psr\Http\Message\ResponseInterface;
 
 use function addslashes;
 use function array_reduce;
@@ -25,13 +25,13 @@ class UploadResponse extends AbstractResponse
      * The constructor
      *
      * @param ResponseManager $xManager
-     * @param Psr17Factory $xPsr17Factory
+     * @param PluginManager $xPluginManager
      * @param string $sUploadedFile
      */
-    public function __construct(ResponseManager $xManager, Psr17Factory $xPsr17Factory,
+    public function __construct(ResponseManager $xManager, PluginManager $xPluginManager,
         string $sUploadedFile = '')
     {
-        parent::__construct($xManager, $xPsr17Factory);
+        parent::__construct($xManager, $xPluginManager);
         $this->sUploadedFile = $sUploadedFile;
     }
 
@@ -82,12 +82,12 @@ class UploadResponse extends AbstractResponse
     /**
      * Convert this response to a PSR7 response object
      *
-     * @return PsrResponseInterface
+     * @return ResponseInterface
      */
-    public function toPsr(): PsrResponseInterface
+    public function toPsr(): ResponseInterface
     {
-        return $this->xPsr17Factory->createResponse(($this->sUploadedFile) ? 200 : 500)
-            ->withHeader('content-type', $this->getContentType())
-            ->withBody(Stream::create($this->getOutput()));
+        /** @var PsrPlugin */
+        $xPlugin = $this->plugin('psr');
+        return $xPlugin->upload(($this->sUploadedFile) ? 200 : 500);
     }
 }

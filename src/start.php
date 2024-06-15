@@ -8,6 +8,7 @@ use Jaxon\App\Config\ConfigEventManager;
 use Jaxon\App\Config\ConfigListenerInterface;
 use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
+use Jaxon\Plugin\Manager\PluginManager;
 use Jaxon\Request\Upload\UploadHandlerInterface;
 use Jaxon\Response\ResponseManager;
 use Jaxon\Upload\Manager\FileNameInterface;
@@ -15,7 +16,6 @@ use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
 use Jaxon\Upload\Manager\Validator;
 use Jaxon\Utils\Config\Config;
-use Nyholm\Psr7\Factory\Psr17Factory;
 
 use function bin2hex;
 use function random_bytes;
@@ -70,7 +70,7 @@ function register(Container $di, bool $bForce = false)
         $xTranslator->loadTranslations($sTranslationDir . '/es/upload.php', 'es');
 
         return new UploadHandler($c->g(UploadManager::class), $c->g(FileStorage::class),
-            $c->g(ResponseManager::class), $c->g(Translator::class), $c->g(Psr17Factory::class));
+            $c->g(ResponseManager::class), $c->g(PluginManager::class), $c->g(Translator::class));
     });
     // Set alias on the interface
     $di->alias(UploadHandlerInterface::class, UploadHandler::class);

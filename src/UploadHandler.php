@@ -16,11 +16,11 @@ namespace Jaxon\Upload;
 
 use Jaxon\App\I18n\Translator;
 use Jaxon\Exception\RequestException;
+use Jaxon\Plugin\Manager\PluginManager;
 use Jaxon\Request\Upload\UploadHandlerInterface;
 use Jaxon\Response\ResponseManager;
 use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
-use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ServerRequestInterface;
 use Closure;
 use Exception;
@@ -53,16 +53,14 @@ class UploadHandler implements UploadHandlerInterface
     protected $xResponseManager;
 
     /**
+     * @var PluginManager
+     */
+    protected $xPluginManager;
+
+    /**
      * @var Translator
      */
     protected $xTranslator;
-
-    /**
-     * The Psr17 factory
-     *
-     * @var Psr17Factory
-     */
-    protected $xPsr17Factory;
 
     /**
      * The uploaded files copied in the user dir
@@ -91,17 +89,17 @@ class UploadHandler implements UploadHandlerInterface
      * @param UploadManager $xUploadManager
      * @param FileStorage $xFileStorage
      * @param ResponseManager $xResponseManager
+     * @param PluginManager $xPluginManager
      * @param Translator $xTranslator
-     * @param Psr17Factory $xPsr17Factory
      */
     public function __construct(UploadManager $xUploadManager, FileStorage $xFileStorage,
-        ResponseManager $xResponseManager, Translator $xTranslator, Psr17Factory $xPsr17Factory)
+        ResponseManager $xResponseManager, PluginManager $xPluginManager, Translator $xTranslator)
     {
         $this->xUploadManager = $xUploadManager;
         $this->xFileStorage = $xFileStorage;
         $this->xResponseManager = $xResponseManager;
+        $this->xPluginManager = $xPluginManager;
         $this->xTranslator = $xTranslator;
-        $this->xPsr17Factory = $xPsr17Factory;
     }
 
     /**
@@ -212,13 +210,13 @@ class UploadHandler implements UploadHandlerInterface
             $this->aUserFiles = $this->xUploadManager->readFromHttpData($xRequest);
             $sTempFile = $this->xUploadManager->saveToTempFile($this->aUserFiles);
             $this->xResponseManager->setResponse(new UploadResponse($this->xResponseManager,
-                $this->xPsr17Factory, $sTempFile));
+                $this->xPluginManager, $sTempFile));
         }
         catch(Exception $e)
         {
             $this->xResponseManager->setErrorMessage($e->getMessage());
             $this->xResponseManager->setResponse(new UploadResponse($this->xResponseManager,
-                $this->xPsr17Factory));
+                $this->xPluginManager));
         }
         return true;
     }
