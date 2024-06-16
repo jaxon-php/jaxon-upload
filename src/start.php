@@ -2,7 +2,7 @@
 
 namespace Jaxon\Upload;
 
-use Jaxon\App\Ajax;
+use Jaxon\App\Ajax\Lib as Jaxon;
 use Jaxon\Di\Container;
 use Jaxon\App\Config\ConfigEventManager;
 use Jaxon\App\Config\ConfigListenerInterface;
@@ -83,7 +83,7 @@ function register(Container $di, bool $bForce = false)
  */
 function registerUpload()
 {
-    $di = Ajax::getInstance()->di();
+    $di = Jaxon::getInstance()->di();
     $sEventListenerKey = UploadHandler::class . '\\ConfigListener';
     if($di->h($sEventListenerKey))
     {
@@ -100,7 +100,7 @@ function registerUpload()
                 $sConfigKey = 'core.upload.enabled';
                 if(($sName === $sConfigKey || $sName === '') && $xConfig->getOption($sConfigKey))
                 {
-                    register(Ajax::getInstance()->di());
+                    register(Jaxon::getInstance()->di());
                 }
             }
         };
