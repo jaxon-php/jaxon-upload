@@ -1,0 +1,48 @@
+{
+    "name": "jaxon-php/jaxon-upload",
+    "type": "library",
+    "description": "File upload with the Jaxon ajax PHP library",
+    "authors": [
+        {"name": "Thierry Feuzeu"}
+    ],
+    "homepage": "https://www.jaxon-php.org",
+    "license": "BSD-3-Clause",
+    "keywords": ["Jaxon", "Ajax", "PHP", "Upload"],
+    "support": {
+        "issues": "https://github.com/jaxon-php/jaxon-upload/issues",
+        "source": "https://github.com/jaxon-php/jaxon-upload"
+    },
+    "require": {
+        "ext-json": "*",
+        "jaxon-php/jaxon-core": "dev-main",
+        "league/flysystem": "^3.0|^2.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "php-coveralls/php-coveralls": "^2.5",
+        "phpunit/phpcov": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jaxon\\Upload\\": "src/"
+        },
+        "files": [
+            "src/start.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jaxon\\Upload\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": [
+            "@clearCache",
+            "@putenv XDEBUG_MODE=coverage",
+            "vendor/bin/phpunit"
+        ],
+        "clearCache": "rm -rf cache/*"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
