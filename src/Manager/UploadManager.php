@@ -28,42 +28,9 @@ use Closure;
 use function Jaxon\jaxon;
 use function call_user_func;
 use function is_array;
-use function json_decode;
-use function json_encode;
 
 class UploadManager
 {
-    /**
-     * The file storage
-     *
-     * @var FileStorage
-     */
-    protected $xFileStorage;
-
-    /**
-     * The file and dir name generator
-     *
-     * @var FileNameInterface
-     */
-    protected $xFileName;
-
-    /**
-     * @var ConfigManager
-     */
-    protected $xConfigManager;
-
-    /**
-     * The request data validator
-     *
-     * @var Validator
-     */
-    protected $xValidator;
-
-    /**
-     * @var Translator
-     */
-    protected $xTranslator;
-
     /**
      * The id of the upload field in the form
      *
@@ -94,14 +61,10 @@ class UploadManager
      * @param Validator $xValidator
      * @param Translator $xTranslator
      */
-    public function __construct(FileStorage $xFileStorage, FileNameInterface $xFileName,
-        ConfigManager $xConfigManager, Validator $xValidator, Translator $xTranslator)
+    public function __construct(private FileStorage $xFileStorage,
+        private FileNameInterface $xFileName, private ConfigManager $xConfigManager,
+        private Validator $xValidator, private Translator $xTranslator)
     {
-        $this->xFileStorage = $xFileStorage;
-        $this->xFileName = $xFileName;
-        $this->xConfigManager = $xConfigManager;
-        $this->xValidator = $xValidator;
-        $this->xTranslator = $xTranslator;
         // This feature is not yet implemented
         $this->setUploadFieldId('');
     }
@@ -113,7 +76,7 @@ class UploadManager
      */
     protected function randomName(): string
     {
-        return $this->xFileName->random(14);
+        return $this->xFileName->random(16);
     }
 
     /**
@@ -178,17 +141,6 @@ class UploadManager
     private function getUploadDir(string $sField): string
     {
         return $this->_makeUploadDir($this->xFileStorage->filesystem($sField), $this->randomName() . '/');
-    }
-
-    /**
-     * Get the path to the upload temp dir
-     *
-     * @return string
-     * @throws RequestException
-     */
-    private function getUploadTempDir(): string
-    {
-        return $this->_makeUploadDir($this->xFileStorage->filesystem(), 'tmp/');
     }
 
     /**
@@ -270,114 +222,6 @@ class UploadManager
         {
             jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
-        }
-        return $aUserFiles;
-    }
-
-    /**
-     * Save uploaded files info to a temp file
-     *
-     * @param array $aUserFiles
-     *
-     * @return string
-     * @throws RequestException
-     */
-    public function saveToTempFile(array $aUserFiles): string
-    {
-        // Convert uploaded file to an array
-        $aFiles = [];
-        foreach($aUserFiles as $sField => $aFieldFiles)
-        {
-            $aFiles[$sField] = [];
-            foreach($aFieldFiles as $aFieldFile)
-            {
-                $aFiles[$sField][] = $aFieldFile->toTempData();
-            }
-        }
-        // Save upload data in a temp file
-        $sUploadDir = $this->getUploadTempDir();
-        $sTempFile = $this->randomName();
-        try
-        {
-            $this->xFileStorage->filesystem()->write($sUploadDir . $sTempFile . '.json', json_encode($aFiles));
-        }
-        catch(FilesystemException $e)
-        {
-            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
-            throw new RequestException($this->xTranslator->trans('errors.upload.access'));
-        }
-        return $sTempFile;
-    }
-
-    /**
-     * Get the path to the upload temp file
-     *
-     * @param string $sTempFile
-     *
-     * @return string
-     * @throws RequestException
-     */
-    private function getUploadTempFile(string $sTempFile): string
-    {
-        // Verify file name validity
-        if(!$this->xValidator->validateTempFileName($sTempFile))
-        {
-            throw new RequestException($this->xTranslator->trans('errors.upload.invalid'));
-        }
-        $sUploadDir = $this->getUploadTempDir();
-        $sUploadTempFile = $sUploadDir . $sTempFile . '.json';
-        try
-        {
-            if($this->xFileStorage->filesystem()->visibility($sUploadTempFile) !== Visibility::PUBLIC)
-            {
-                throw new RequestException($this->xTranslator->trans('errors.upload.access'));
-            }
-            return $sUploadTempFile;
-        }
-        catch(FilesystemException $e)
-        {
-            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
-            throw new RequestException($this->xTranslator->trans('errors.upload.access'));
-        }
-    }
-
-    /**
-     * Read uploaded files info from a temp file
-     *
-     * @param string $sTempFile
-     *
-     * @return array
-     * @throws RequestException
-     */
-    public function readFromTempFile(string $sTempFile): array
-    {
-        $xFileSystem = $this->xFileStorage->filesystem();
-        // Upload temp file
-        $sUploadTempFile = $this->getUploadTempFile($sTempFile);
-        try
-        {
-            $aFiles = json_decode($xFileSystem->read($sUploadTempFile), true);
-        }
-        catch(FilesystemException $e)
-        {
-            throw new RequestException($this->xTranslator->trans('errors.upload.access'));
-        }
-        $aUserFiles = [];
-        foreach($aFiles as $sField => $aFieldFiles)
-        {
-            $aUserFiles[$sField] = [];
-            foreach($aFieldFiles as $aFieldFile)
-            {
-                $aUserFiles[$sField][] = File::fromTempFile($this->xFileStorage->filesystem($sField), $aFieldFile);
-            }
-        }
-        try
-        {
-            $xFileSystem->delete($sUploadTempFile);
-        }
-        catch(FilesystemException $e)
-        {
-            jaxon()->logger()->warning('Filesystem error', ['message' => $e->getMessage()]);
         }
         return $aUserFiles;
     }

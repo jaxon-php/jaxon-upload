@@ -81,7 +81,8 @@ class File implements FileInterface
      *
      * @return File
      */
-    public static function fromHttpFile(Filesystem $xFilesystem, UploadedFile $xHttpFile, string $sUploadDir, string $sName): File
+    public static function fromHttpFile(Filesystem $xFilesystem,
+        UploadedFile $xHttpFile, string $sUploadDir, string $sName): File
     {
         $xFile = new File();
         $xFile->xFilesystem = $xFilesystem;
@@ -92,44 +93,6 @@ class File implements FileInterface
         $xFile->nSize = $xHttpFile->getSize();
         $xFile->sPath = $sUploadDir . $xFile->sName . '.' . $xFile->sExtension;
         return $xFile;
-    }
-
-    /**
-     * Create an instance of this class using data from a temp file
-     *
-     * @param Filesystem $xFilesystem
-     * @param array $aFile The uploaded file data
-     *
-     * @return File
-     */
-    public static function fromTempFile(Filesystem $xFilesystem, array $aFile): File
-    {
-        $xFile = new File();
-        $xFile->xFilesystem = $xFilesystem;
-        $xFile->sType = $aFile['type'];
-        $xFile->sName = $aFile['name'];
-        $xFile->sFilename = $aFile['filename'];
-        $xFile->sExtension = $aFile['extension'];
-        $xFile->nSize = $aFile['size'];
-        $xFile->sPath = $aFile['path'];
-        return $xFile;
-    }
-
-    /**
-     * Convert the File instance to array.
-     *
-     * @return array<string,string>
-     */
-    public function toTempData(): array
-    {
-        return [
-            'type' => $this->sType,
-            'name' => $this->sName,
-            'filename' => $this->sFilename,
-            'extension' => $this->sExtension,
-            'size' => $this->nSize,
-            'path' => $this->sPath,
-        ];
     }
 
     /**

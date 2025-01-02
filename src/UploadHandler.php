@@ -23,11 +23,8 @@ use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
 use Psr\Http\Message\ServerRequestInterface;
 use Closure;
-use Exception;
 
 use function count;
-use function is_array;
-use function trim;
 
 class UploadHandler implements UploadHandlerInterface
 {
@@ -125,16 +122,6 @@ class UploadHandler implements UploadHandlerInterface
     }
 
     /**
-     * Inform this plugin that other plugin can process the current request
-     *
-     * @return void
-     */
-    public function isHttpUpload()
-    {
-        $this->bIsAjaxRequest = false;
-    }
-
-    /**
      * Check if the current request contains uploaded files
      *
      * @param ServerRequestInterface $xRequest
@@ -143,37 +130,7 @@ class UploadHandler implements UploadHandlerInterface
      */
     public function canProcessRequest(ServerRequestInterface $xRequest): bool
     {
-        if(count($xRequest->getUploadedFiles()) > 0)
-        {
-            return true;
-        }
-        $aBody = $xRequest->getParsedBody();
-        if(is_array($aBody))
-        {
-            return isset($aBody['jxnupl']);
-        }
-        $aParams = $xRequest->getQueryParams();
-        return isset($aParams['jxnupl']);
-    }
-
-    /**
-     * Read the upload temp file name from the HTTP request
-     *
-     * @param ServerRequestInterface $xRequest
-     *
-     * @return bool
-     */
-    private function setTempFile(ServerRequestInterface $xRequest): bool
-    {
-        $aBody = $xRequest->getParsedBody();
-        if(is_array($aBody))
-        {
-            $this->sTempFile = trim($aBody['jxnupl'] ?? '');
-            return $this->sTempFile !== '';
-        }
-        $aParams = $xRequest->getQueryParams();
-        $this->sTempFile = trim($aParams['jxnupl'] ?? '');
-        return $this->sTempFile !== '';
+        return count($xRequest->getUploadedFiles()) > 0;
     }
 
     /**
@@ -186,38 +143,9 @@ class UploadHandler implements UploadHandlerInterface
      */
     public function processRequest(ServerRequestInterface $xRequest): bool
     {
-        if($this->setTempFile($xRequest))
-        {
-            // Ajax request following a normal HTTP upload.
-            // Copy the previously uploaded files' location from the temp file.
-            $this->aUserFiles = $this->xUploadManager->readFromTempFile($this->sTempFile);
-            return true;
-        }
-
-        if($this->bIsAjaxRequest)
-        {
-            // Ajax request with upload.
-            // Copy the uploaded files from the HTTP request.
-            $this->aUserFiles = $this->xUploadManager->readFromHttpData($xRequest);
-            return true;
-        }
-
-        // For HTTP requests, save the files' location to a temp file,
-        // and return a response with a reference to this temp file.
-        try
-        {
-            // Copy the uploaded files from the HTTP request, and create the temp file.
-            $this->aUserFiles = $this->xUploadManager->readFromHttpData($xRequest);
-            $sTempFile = $this->xUploadManager->saveToTempFile($this->aUserFiles);
-            $this->xResponseManager->setResponse(new UploadResponse($this->xResponseManager,
-                $this->xPluginManager, $sTempFile));
-        }
-        catch(Exception $e)
-        {
-            $this->xResponseManager->setErrorMessage($e->getMessage());
-            $this->xResponseManager->setResponse(new UploadResponse($this->xResponseManager,
-                $this->xPluginManager));
-        }
+        // Ajax request with upload.
+        // Copy the uploaded files from the HTTP request.
+        $this->aUserFiles = $this->xUploadManager->readFromHttpData($xRequest);
         return true;
     }
 

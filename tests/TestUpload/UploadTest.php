@@ -5,21 +5,16 @@ namespace Jaxon\Upload\Tests\TestUpload;
 use Jaxon\Jaxon;
 use Jaxon\Exception\RequestException;
 use Jaxon\Exception\SetupException;
-use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\UploadedFile;
 use Nyholm\Psr7Server\ServerRequestCreator;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 
 use function Jaxon\jaxon;
-use function Jaxon\Upload\registerUpload;
-use function copy;
 use function filesize;
-use function mkdir;
+use function Jaxon\Upload\registerUpload;
 
-class UploadHandlerTest extends TestCase
+class UploadTest extends TestCase
 {
     /**
      * @var string
@@ -56,11 +51,10 @@ class UploadHandlerTest extends TestCase
      */
     public function setUp(): void
     {
-        jaxon()->di()->getPluginManager()->registerPlugins();
         registerUpload();
         jaxon()->setOption('core.upload.enabled', true);
-        jaxon()->setOption('core.response.send', false);
 
+        jaxon()->setOption('core.response.send', false);
         $tmpDir = __DIR__ . '/../upload/tmp';
         @mkdir($tmpDir);
 
@@ -296,8 +290,7 @@ class UploadHandlerTest extends TestCase
                 ->withUploadedFiles([
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
-                ])
-                ->withMethod('POST');
+                ])->withMethod('POST');
         });
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
@@ -560,65 +553,23 @@ class UploadHandlerTest extends TestCase
 
     /**
      * @throws RequestException
-     * @throws SetupException
      */
-    public function testPsrAjaxUpload()
+    public function testRequestWithNoPluginNoUpload()
     {
-        registerUpload();
-        jaxon()->setOption('core.upload.enabled', true);
-        jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst');
+        jaxon()->setOption('core.upload.enabled', false);
         // Send a request to the registered class
-        $xRequest = jaxon()->di()->g(ServerRequestCreator::class)
-            ->fromGlobals()
-            ->withParsedBody([
-                'jxncall' => json_encode([
-                    'type' => 'class',
-                    'name' => 'Sample',
-                    'method' => 'myMethod',
-                    'args' => [],
-                ]),
-            ])
-            ->withUploadedFiles([
-                'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
-                    UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
-            ])
-            ->withMethod('POST');
+        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
+            return $c->g(ServerRequestCreator::class)
+                ->fromGlobals()
+                ->withParsedBody([
+                    'jxncall' => json_encode([
+                        'who' => 'Nobody',
+                        'args' => [],
+                    ]),
+                ])
+                ->withMethod('POST');
+        });
 
-        $xPsrConfigMiddleware = jaxon()->psr()->config(__DIR__ . '/../config/psr.php');
-        $xPsrAjaxMiddleware = jaxon()->psr()->ajax();
-        // PSR request handler that does nothing, useful to call the config middleware.
-        $xEmptyRequestHandler = new class implements RequestHandlerInterface
-        {
-            private $xPsr17Factory;
-
-            public function __construct()
-            {
-                $this->xPsr17Factory = new Psr17Factory();
-            }
-
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return $this->xPsr17Factory->createResponse();
-            }
-        };
-        // Call the config middleware
-        $xPsrConfigMiddleware->process($xRequest, $xEmptyRequestHandler);
-        // Call the ajax middleware
-        $xPsrResponse = $xPsrAjaxMiddleware->process($xRequest, $xEmptyRequestHandler);
-
-        // Both responses must have the same content and content type
-        $xJaxonResponse = jaxon()->getResponse();
-        $this->assertEquals($xPsrResponse->getBody()->__toString(), $xJaxonResponse->getOutput());
-        $this->assertEquals($xPsrResponse->getHeader('content-type')[0], $xJaxonResponse->getContentType());
-
-        // Uploaded files
-        $aFiles = jaxon()->upload()->files();
-        $this->assertCount(1, $aFiles);
-        $this->assertCount(1, $aFiles['image']);
-        $xFile = $aFiles['image'][0];
-        $this->assertEquals('white', $xFile->name());
-        $this->assertEquals($this->sNameWhite, $xFile->filename());
-        $this->assertEquals('png', $xFile->type());
-        $this->assertEquals('png', $xFile->extension());
+        $this->assertFalse(jaxon()->di()->getRequestHandler()->canProcessRequest());
     }
 }
