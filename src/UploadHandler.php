@@ -14,11 +14,8 @@
 
 namespace Jaxon\Upload;
 
-use Jaxon\App\I18n\Translator;
 use Jaxon\Exception\RequestException;
-use Jaxon\Plugin\Manager\PluginManager;
 use Jaxon\Request\Upload\UploadHandlerInterface;
-use Jaxon\Response\ResponseManager;
 use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
 use Psr\Http\Message\ServerRequestInterface;
@@ -29,75 +26,21 @@ use function count;
 class UploadHandler implements UploadHandlerInterface
 {
     /**
-     * The upload manager
-     *
-     * @var UploadManager
-     */
-    protected $xUploadManager;
-
-    /**
-     * The file storage
-     *
-     * @var FileStorage
-     */
-    protected $xFileStorage;
-
-    /**
-     * The response manager
-     *
-     * @var ResponseManager
-     */
-    protected $xResponseManager;
-
-    /**
-     * @var PluginManager
-     */
-    protected $xPluginManager;
-
-    /**
-     * @var Translator
-     */
-    protected $xTranslator;
-
-    /**
      * The uploaded files copied in the user dir
      *
      * @var array
      */
-    protected $aUserFiles = [];
-
-    /**
-     * The name of file containing upload data
-     *
-     * @var string
-     */
-    protected $sTempFile = '';
-
-    /**
-     * Is the current request an HTTP upload
-     *
-     * @var bool
-     */
-    protected $bIsAjaxRequest = true;
+    private $aUserFiles = [];
 
     /**
      * The constructor
      *
-     * @param UploadManager $xUploadManager
      * @param FileStorage $xFileStorage
-     * @param ResponseManager $xResponseManager
-     * @param PluginManager $xPluginManager
-     * @param Translator $xTranslator
+     * @param UploadManager $xUploadManager
      */
-    public function __construct(UploadManager $xUploadManager, FileStorage $xFileStorage,
-        ResponseManager $xResponseManager, PluginManager $xPluginManager, Translator $xTranslator)
-    {
-        $this->xUploadManager = $xUploadManager;
-        $this->xFileStorage = $xFileStorage;
-        $this->xResponseManager = $xResponseManager;
-        $this->xPluginManager = $xPluginManager;
-        $this->xTranslator = $xTranslator;
-    }
+    public function __construct(private FileStorage $xFileStorage,
+        private UploadManager $xUploadManager)
+    {}
 
     /**
      * Set the uploaded file name sanitizer
@@ -143,7 +86,6 @@ class UploadHandler implements UploadHandlerInterface
      */
     public function processRequest(ServerRequestInterface $xRequest): bool
     {
-        // Ajax request with upload.
         // Copy the uploaded files from the HTTP request.
         $this->aUserFiles = $this->xUploadManager->readFromHttpData($xRequest);
         return true;
