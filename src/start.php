@@ -8,9 +8,7 @@ use Jaxon\App\Config\ConfigEventManager;
 use Jaxon\App\Config\ConfigListenerInterface;
 use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
-use Jaxon\Plugin\Manager\PluginManager;
 use Jaxon\Request\Upload\UploadHandlerInterface;
-use Jaxon\Response\ResponseManager;
 use Jaxon\Upload\Manager\FileNameInterface;
 use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
@@ -56,11 +54,6 @@ function register(Container $di, bool $bForce = false)
     });
     // File upload manager
     $di->set(UploadManager::class, function($c) {
-        return new UploadManager($c->g(FileStorage::class), $c->g(FileNameInterface::class),
-            $c->g(ConfigManager::class), $c->g(Validator::class), $c->g(Translator::class));
-    });
-    // File upload plugin
-    $di->set(UploadHandler::class, function($c) {
         // Translation directory
         $sTranslationDir = realpath(__DIR__ . '/../../translations');
         // Load the upload translations
@@ -69,8 +62,12 @@ function register(Container $di, bool $bForce = false)
         $xTranslator->loadTranslations($sTranslationDir . '/fr/upload.php', 'fr');
         $xTranslator->loadTranslations($sTranslationDir . '/es/upload.php', 'es');
 
-        return new UploadHandler($c->g(UploadManager::class), $c->g(FileStorage::class),
-            $c->g(ResponseManager::class), $c->g(PluginManager::class), $c->g(Translator::class));
+        return new UploadManager($c->g(FileStorage::class), $c->g(FileNameInterface::class),
+            $c->g(ConfigManager::class), $c->g(Validator::class), $xTranslator);
+    });
+    // File upload plugin
+    $di->set(UploadHandler::class, function($c) {
+        return new UploadHandler($c->g(FileStorage::class), $c->g(UploadManager::class));
     });
     // Set alias on the interface
     $di->alias(UploadHandlerInterface::class, UploadHandler::class);
