@@ -27,7 +27,7 @@
             "Jaxon\\Upload\\": "src/"
         },
         "files": [
-            "src/start.php"
+            "src/register.php"
         ]
     },
     "autoload-dev": {

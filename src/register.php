@@ -2,7 +2,6 @@
 
 namespace Jaxon\Upload;
 
-use Jaxon\App\Ajax\Lib as Jaxon;
 use Jaxon\Di\Container;
 use Jaxon\App\Config\ConfigEventManager;
 use Jaxon\App\Config\ConfigListenerInterface;
@@ -15,7 +14,9 @@ use Jaxon\Upload\Manager\UploadManager;
 use Jaxon\Upload\Manager\Validator;
 use Jaxon\Utils\Config\Config;
 
+use function Jaxon\jaxon;
 use function bin2hex;
+use function php_sapi_name;
 use function random_bytes;
 use function realpath;
 
@@ -25,7 +26,7 @@ use function realpath;
  *
  * @return void
  */
-function register(Container $di, bool $bForce = false)
+function registerUpload(Container $di, bool $bForce = false)
 {
     if(!$bForce && $di->h(UploadHandler::class))
     {
@@ -78,9 +79,15 @@ function register(Container $di, bool $bForce = false)
  *
  * @return void
  */
-function registerUpload()
+function register()
 {
-    $di = Jaxon::getInstance()->di();
+    // Register only if running on a web server.
+    if(php_sapi_name() === 'cli')
+    {
+        return;
+    };
+
+    $di = jaxon()->di();
     $sEventListenerKey = UploadHandler::class . '\\ConfigListener';
     if($di->h($sEventListenerKey))
     {
@@ -97,7 +104,7 @@ function registerUpload()
                 $sConfigKey = 'core.upload.enabled';
                 if(($sName === $sConfigKey || $sName === '') && $xConfig->getOption($sConfigKey))
                 {
-                    register(Jaxon::getInstance()->di());
+                    registerUpload(jaxon()->di());
                 }
             }
         };
@@ -108,5 +115,4 @@ function registerUpload()
     $xEventManager->addListener($sEventListenerKey);
 }
 
-// Initialize the upload handler
-registerUpload();
+register();
