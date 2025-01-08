@@ -26,7 +26,7 @@ use function realpath;
  *
  * @return void
  */
-function registerUpload(Container $di, bool $bForce = false)
+function setupDi(Container $di, bool $bForce = false)
 {
     if(!$bForce && $di->h(UploadHandler::class))
     {
@@ -81,7 +81,7 @@ function registerUpload(Container $di, bool $bForce = false)
  */
 function register()
 {
-    // Register only if running on a web server.
+    // Do nothing if running in cli.
     if(php_sapi_name() === 'cli')
     {
         return;
@@ -104,7 +104,7 @@ function register()
                 $sConfigKey = 'core.upload.enabled';
                 if(($sName === $sConfigKey || $sName === '') && $xConfig->getOption($sConfigKey))
                 {
-                    registerUpload(jaxon()->di());
+                    setupDi(jaxon()->di());
                 }
             }
         };

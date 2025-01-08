@@ -14,7 +14,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 
 use function Jaxon\jaxon;
-use function Jaxon\Upload\registerUpload;
+use function Jaxon\Upload\register;
 use function copy;
 use function filesize;
 use function mkdir;
@@ -57,7 +57,7 @@ class UploadHandlerTest extends TestCase
     public function setUp(): void
     {
         jaxon()->di()->getPluginManager()->registerPlugins();
-        registerUpload();
+        register();
         jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('core.response.send', false);
 
@@ -564,7 +564,7 @@ class UploadHandlerTest extends TestCase
      */
     public function testPsrAjaxUpload()
     {
-        registerUpload();
+        register();
         jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst');
         // Send a request to the registered class

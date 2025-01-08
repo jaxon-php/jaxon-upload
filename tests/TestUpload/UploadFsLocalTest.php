@@ -11,7 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use PHPUnit\Framework\TestCase;
 
 use function Jaxon\jaxon;
-use function Jaxon\Upload\registerUpload;
+use function Jaxon\Upload\register;
 use function copy;
 use function filesize;
 use function mkdir;
@@ -54,7 +54,7 @@ class UploadFsLocalTest extends TestCase
     public function setUp(): void
     {
         jaxon()->di()->getPluginManager()->registerPlugins();
-        registerUpload();
+        register();
         jaxon()->setOption('core.response.send', false);
 
         $tmpDir = __DIR__ . '/../upload/tmp';
