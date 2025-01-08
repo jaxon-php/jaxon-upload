@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Jaxon\jaxon;
 use function filesize;
-use function Jaxon\Upload\register;
+use function Jaxon\Upload\_register;
 
 class UploadTest extends TestCase
 {
@@ -51,7 +51,7 @@ class UploadTest extends TestCase
      */
     public function setUp(): void
     {
-        register();
+        _register();
         jaxon()->setOption('core.upload.enabled', true);
 
         jaxon()->setOption('core.response.send', false);

@@ -79,14 +79,8 @@ function setupDi(Container $di, bool $bForce = false)
  *
  * @return void
  */
-function register()
+function _register()
 {
-    // Do nothing if running in cli.
-    if(php_sapi_name() === 'cli')
-    {
-        return;
-    };
-
     $di = jaxon()->di();
     $sEventListenerKey = UploadHandler::class . '\\ConfigListener';
     if($di->h($sEventListenerKey))
@@ -113,6 +107,15 @@ function register()
     // Register the event listener
     $xEventManager = $di->g(ConfigEventManager::class);
     $xEventManager->addListener($sEventListenerKey);
+}
+
+function register()
+{
+    // Do nothing if running in cli.
+    if(php_sapi_name() !== 'cli')
+    {
+        _register();
+    };
 }
 
 register();
