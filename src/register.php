@@ -81,7 +81,8 @@ function setupDi(Container $di, bool $bForce = false)
  */
 function _register()
 {
-    $di = jaxon()->di();
+    $jaxon = jaxon();
+    $di = $jaxon->di();
     $sEventListenerKey = UploadHandler::class . '\\ConfigListener';
     if($di->h($sEventListenerKey))
     {
@@ -104,9 +105,8 @@ function _register()
         };
     });
 
-    // Register the event listener
-    $xEventManager = $di->g(ConfigEventManager::class);
-    $xEventManager->addListener($sEventListenerKey);
+    // Listener for app config changes.
+    $jaxon->config()->addLibEventListener($sEventListenerKey);
 }
 
 function register()
