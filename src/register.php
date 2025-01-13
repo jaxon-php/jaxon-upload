@@ -3,16 +3,15 @@
 namespace Jaxon\Upload;
 
 use Jaxon\Di\Container;
-use Jaxon\App\Config\ConfigEventManager;
 use Jaxon\App\Config\ConfigListenerInterface;
 use Jaxon\App\Config\ConfigManager;
+use Jaxon\Config\Config;
 use Jaxon\App\I18n\Translator;
 use Jaxon\Request\Upload\UploadHandlerInterface;
 use Jaxon\Upload\Manager\FileNameInterface;
 use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
 use Jaxon\Upload\Manager\Validator;
-use Jaxon\Utils\Config\Config;
 
 use function Jaxon\jaxon;
 use function bin2hex;
