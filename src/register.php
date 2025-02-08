@@ -2,7 +2,6 @@
 
 namespace Jaxon\Upload;
 
-use Jaxon\Di\Container;
 use Jaxon\App\Config\ConfigListenerInterface;
 use Jaxon\App\Config\ConfigManager;
 use Jaxon\Config\Config;
@@ -20,14 +19,13 @@ use function random_bytes;
 use function realpath;
 
 /**
- * @param Container $di
- * @param bool $bForce Force registration
- *
  * @return void
  */
-function setupDi(Container $di, bool $bForce = false)
+function registerUpload()
 {
-    if(!$bForce && $di->h(UploadHandler::class))
+    $jaxon = jaxon();
+    $di = $jaxon->di();
+    if($di->h(UploadHandler::class))
     {
         return;
     }
@@ -58,9 +56,9 @@ function setupDi(Container $di, bool $bForce = false)
         $sTranslationDir = realpath(__DIR__ . '/../../translations');
         // Load the upload translations
         $xTranslator = $c->g(Translator::class);
-        $xTranslator->loadTranslations($sTranslationDir . '/en/upload.php', 'en');
-        $xTranslator->loadTranslations($sTranslationDir . '/fr/upload.php', 'fr');
-        $xTranslator->loadTranslations($sTranslationDir . '/es/upload.php', 'es');
+        $xTranslator->loadTranslations("$sTranslationDir/en/upload.php", 'en');
+        $xTranslator->loadTranslations("$sTranslationDir/fr/upload.php", 'fr');
+        $xTranslator->loadTranslations("$sTranslationDir/es/upload.php", 'es');
 
         return new UploadManager($c->g(FileStorage::class), $c->g(FileNameInterface::class),
             $c->g(ConfigManager::class), $c->g(Validator::class), $xTranslator);
@@ -71,6 +69,22 @@ function setupDi(Container $di, bool $bForce = false)
     });
     // Set alias on the interface
     $di->alias(UploadHandlerInterface::class, UploadHandler::class);
+
+    // Set a callback to process uploaded files in the incoming requests.
+    $jaxon->callback()->before(function() use($jaxon, $di) {
+        if(!$jaxon->getOption('core.upload.enabled'))
+        {
+            return;
+        }
+        /** @var UploadHandler */
+        $xUploadHandler = $di->g(UploadHandler::class);
+        // The HTTP request
+        $xRequest = $di->getRequest();
+        if($xUploadHandler->canProcessRequest($xRequest))
+        {
+            $xUploadHandler->processRequest($xRequest);
+        }
+    });
 }
 
 /**
@@ -98,7 +112,7 @@ function _register()
                 $sConfigKey = 'core.upload.enabled';
                 if(($sName === $sConfigKey || $sName === '') && $xConfig->getOption($sConfigKey))
                 {
-                    setupDi(jaxon()->di());
+                    registerUpload();
                 }
             }
         };
