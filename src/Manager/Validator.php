@@ -5,7 +5,7 @@
  *
  * Validate requests data before the are passed into the library.
  *
- * @package jaxon-core
+ * @package jaxon-upload
  * @author Thierry Feuzeu <thierry.feuzeu@gmail.com>
  * @copyright 2022 Thierry Feuzeu <thierry.feuzeu@gmail.com>
  * @license https://opensource.org/licenses/BSD-3-Clause BSD 3-Clause License
