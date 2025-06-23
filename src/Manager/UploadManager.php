@@ -22,10 +22,10 @@ use League\Flysystem\FilesystemException;
 use League\Flysystem\Visibility;
 use Nyholm\Psr7\UploadedFile;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerInterface;
 
 use Closure;
 
-use function Jaxon\jaxon;
 use function call_user_func;
 use function is_array;
 
@@ -53,17 +53,33 @@ class UploadManager
     private $aAllFiles = [];
 
     /**
+     * @var array
+     */
+    private $errorMessages = [
+        0 => 'There is no error, the file uploaded with success',
+        1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
+        2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
+        3 => 'The uploaded file was only partially uploaded',
+        4 => 'No file was uploaded',
+        6 => 'Missing a temporary folder',
+        7 => 'Failed to write file to disk.',
+        8 => 'A PHP extension stopped the file upload.',
+    ];
+
+    /**
      * The constructor
      *
+     * @param LoggerInterface $xLogger
+     * @param Validator $xValidator
+     * @param Translator $xTranslator
      * @param FileStorage $xFileStorage
      * @param FileNameInterface $xFileName
      * @param ConfigManager $xConfigManager
-     * @param Validator $xValidator
-     * @param Translator $xTranslator
      */
-    public function __construct(private FileStorage $xFileStorage,
-        private FileNameInterface $xFileName, private ConfigManager $xConfigManager,
-        private Validator $xValidator, private Translator $xTranslator)
+    public function __construct(private LoggerInterface $xLogger,
+        private Validator $xValidator, private Translator $xTranslator,
+        private FileStorage $xFileStorage, private FileNameInterface $xFileName,
+        private ConfigManager $xConfigManager)
     {
         // This feature is not yet implemented
         $this->setUploadFieldId('');
@@ -125,7 +141,7 @@ class UploadManager
         }
         catch(FilesystemException $e)
         {
-            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
+            $this->xLogger->error('Filesystem error.', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
     }
@@ -156,8 +172,13 @@ class UploadManager
     private function makeUploadedFile(UploadedFile $xHttpFile, string $sUploadDir, string $sField): File
     {
         // Check the uploaded file validity
-        if($xHttpFile->getError())
+        $nErrorCode = $xHttpFile->getError();
+        if($nErrorCode !== UPLOAD_ERR_OK)
         {
+            $this->xLogger->error('File upload error.', [
+                'code' => $nErrorCode,
+                'message' => $this->errorMessages[$nErrorCode],
+            ]);
             throw new RequestException($this->xTranslator->trans('errors.upload.failed', ['name' => $sField]));
         }
 
@@ -220,7 +241,7 @@ class UploadManager
         }
         catch(FilesystemException $e)
         {
-            jaxon()->logger()->error('Filesystem error', ['message' => $e->getMessage()]);
+            $this->xLogger->error('Filesystem error.', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
         return $aUserFiles;
