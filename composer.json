@@ -15,7 +15,7 @@
     "require": {
         "php": ">=8.0",
         "ext-json": "*",
-        "jaxon-php/jaxon-core": "dev-main",
+        "jaxon-php/jaxon-core": "^5.0",
         "league/flysystem": "^3.0|^2.2"
     },
     "require-dev": {
