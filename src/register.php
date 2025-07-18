@@ -20,7 +20,7 @@ use function random_bytes;
 /**
  * @return void
  */
-function registerUpload()
+function registerUpload(): void
 {
     $jaxon = jaxon();
     $di = $jaxon->di();
@@ -88,7 +88,7 @@ function registerUpload()
  *
  * @return void
  */
-function _register()
+function _register(): void
 {
     $jaxon = jaxon();
     $jaxon->callback()->boot(function() use($jaxon) {

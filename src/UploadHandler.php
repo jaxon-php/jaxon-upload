@@ -49,7 +49,7 @@ class UploadHandler implements UploadHandlerInterface
      *
      * @return void
      */
-    public function sanitizer(Closure $cSanitizer)
+    public function sanitizer(Closure $cSanitizer): void
     {
         $this->xUploadManager->setNameSanitizer($cSanitizer);
     }
@@ -97,7 +97,7 @@ class UploadHandler implements UploadHandlerInterface
      *
      * @return void
      */
-    public function registerStorageAdapter(string $sStorage, Closure $cFactory)
+    public function registerStorageAdapter(string $sStorage, Closure $cFactory): void
     {
         $this->xFileStorage->registerAdapter($sStorage, $cFactory);
     }

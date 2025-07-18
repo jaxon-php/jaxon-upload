@@ -102,7 +102,7 @@ class UploadManager
      *
      * @return void
      */
-    public function setUploadFieldId(string $sUploadFieldId)
+    public function setUploadFieldId(string $sUploadFieldId): void
     {
         $this->sUploadFieldId = $sUploadFieldId;
     }
@@ -114,7 +114,7 @@ class UploadManager
      *
      * @return void
      */
-    public function setNameSanitizer(Closure $cNameSanitizer)
+    public function setNameSanitizer(Closure $cNameSanitizer): void
     {
         $this->cNameSanitizer = $cNameSanitizer;
     }
