@@ -74,7 +74,7 @@ class UploadFsLocalTest extends TestCase
         // Copy the file to the temp dir.
         @copy($sSrcBlue, $this->sPathBlue);
 
-        jaxon()->register(Jaxon::CALLABLE_CLASS, 'Sample', __DIR__ . '/../src/sample.php');
+        jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
     }
 
     /**

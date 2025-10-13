@@ -2,7 +2,7 @@
 
 use function Jaxon\jaxon;
 
-class Sample
+class SampleUpload
 {
     public function myMethod()
     {
