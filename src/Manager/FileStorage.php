@@ -58,6 +58,7 @@ class FileStorage
     {
         $this->xConfigManager = $xConfigManager;
         $this->xTranslator = $xTranslator;
+        $this->registerAdapters();
     }
 
     /**
@@ -76,7 +77,7 @@ class FileStorage
      *
      * @return void
      */
-    public function registerAdapters()
+    private function registerAdapters()
     {
         // Local file system adapter
         $this->registerAdapter('local', function(string $sRootDir, $xOptions) {
@@ -170,7 +171,8 @@ class FileStorage
             throw new RequestException($this->xTranslator->trans('errors.upload.adapter'));
         }
 
-        $this->aFilesystems[$sField] = new Filesystem(call_user_func($this->aAdapters[$sStorage], $sRootDir, $aOptions));
+        $xAdapter = call_user_func($this->aAdapters[$sStorage], $sRootDir, $aOptions);
+        $this->aFilesystems[$sField] = new Filesystem($xAdapter);
         return $this->aFilesystems[$sField];
     }
 }

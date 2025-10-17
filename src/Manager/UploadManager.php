@@ -133,7 +133,7 @@ class UploadManager
         try
         {
             $xFilesystem->createDirectory($sUploadDir);
-            if($xFilesystem->visibility($sUploadDir) !== Visibility::PUBLIC)
+            if(!$xFilesystem->directoryExists($sUploadDir))
             {
                 throw new RequestException($this->xTranslator->trans('errors.upload.access'));
             }

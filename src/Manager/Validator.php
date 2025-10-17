@@ -27,7 +27,6 @@ use Jaxon\App\I18n\Translator;
 
 use function in_array;
 use function is_array;
-use function preg_match;
 
 class Validator
 {
@@ -68,19 +67,6 @@ class Validator
     public function getErrorMessage(): string
     {
         return $this->sErrorMessage;
-    }
-
-    /**
-     * Validate a temp file name
-     *
-     * @param string $sVarName    The temp file name
-     *
-     * @return bool
-     */
-    public function validateTempFileName(string $sVarName): bool
-    {
-        $this->sErrorMessage = '';
-        return (preg_match('/^[a-zA-Z0-9_\x7f-\xff]*$/', $sVarName) > 0);
     }
 
     /**

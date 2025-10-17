@@ -45,9 +45,7 @@ function registerUpload(): void
     });
     // File storage
     $di->set(FileStorage::class, function($c) {
-        $xFileStorage = new FileStorage($c->g(ConfigManager::class), $c->g(Translator::class));
-        $xFileStorage->registerAdapters();
-        return $xFileStorage;
+        return  new FileStorage($c->g(ConfigManager::class), $c->g(Translator::class));
     });
     // File upload manager
     $di->set(UploadManager::class, function($c) {

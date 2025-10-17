@@ -21,7 +21,8 @@
     "require-dev": {
         "phpunit/phpunit": "^9.5",
         "php-coveralls/php-coveralls": "^2.5",
-        "phpunit/phpcov": "^8.2"
+        "phpunit/phpcov": "^8.2",
+        "league/flysystem-memory": "^3.0|^2.2"
     },
     "autoload": {
         "psr-4": {

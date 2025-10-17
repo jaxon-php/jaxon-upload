@@ -54,8 +54,9 @@ class UploadFsLocalTest extends TestCase
     public function setUp(): void
     {
         jaxon()->di()->getPluginManager()->registerPlugins();
-        _register();
         jaxon()->setOption('core.response.send', false);
+        jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst');
+        _register();
 
         $tmpDir = __DIR__ . '/../upload/tmp';
         @mkdir($tmpDir);
@@ -73,8 +74,6 @@ class UploadFsLocalTest extends TestCase
         $this->sSizeBlue = filesize($sSrcBlue);
         // Copy the file to the temp dir.
         @copy($sSrcBlue, $this->sPathBlue);
-
-        jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
     }
 
     /**
@@ -92,6 +91,8 @@ class UploadFsLocalTest extends TestCase
     public function testHttpUploadDisabled()
     {
         jaxon()->setOption('core.upload.enabled', false);
+        jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
+
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -112,6 +113,8 @@ class UploadFsLocalTest extends TestCase
     public function testRequestWithNoPluginNoUpload()
     {
         jaxon()->setOption('core.upload.enabled', false);
+        jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
+
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -126,5 +129,48 @@ class UploadFsLocalTest extends TestCase
         });
 
         $this->assertFalse(jaxon()->di()->getRequestHandler()->canProcessRequest());
+    }
+
+    /**
+     * @throws RequestException
+     */
+    public function testUploadInMemoryStorage()
+    {
+        jaxon()->setOption('core.upload.enabled', true);
+        jaxon()->setOption('upload.default.storage', 'memory');
+        jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
+
+        // Send a request to the registered class
+        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
+            return $c->g(ServerRequestCreator::class)
+                ->fromGlobals()
+                ->withParsedBody([
+                    'jxncall' => json_encode([
+                        'type' => 'class',
+                        'name' => 'SampleUpload',
+                        'method' => 'myMethod',
+                        'args' => [],
+                    ]),
+                ])
+                ->withUploadedFiles([
+                    'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
+                        UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
+                ])
+                ->withMethod('POST');
+        });
+
+        $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
+        $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
+        jaxon()->processRequest();
+
+        // Uploaded files
+        $aFiles = jaxon()->upload()->files();
+        $this->assertCount(1, $aFiles);
+        $this->assertCount(1, $aFiles['image']);
+        $xFile = $aFiles['image'][0];
+        $this->assertEquals('white', $xFile->name());
+        $this->assertEquals($this->sNameWhite, $xFile->filename());
+        $this->assertEquals('png', $xFile->type());
+        $this->assertEquals('png', $xFile->extension());
     }
 }
