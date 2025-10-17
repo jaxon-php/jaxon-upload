@@ -85,11 +85,6 @@ class FileStorage
                 new LocalFilesystemAdapter($sRootDir, $xOptions);
         });
 
-        // In memory file system adapter
-        $this->registerAdapter('memory', function() {
-            return new \League\Flysystem\InMemory\InMemoryFilesystemAdapter();
-        });
-
         // AWS S3 file system adapter
         $this->registerAdapter('aws-s3', function(string $sRootDir, array $aOptions) {
             /** @var \Aws\S3\S3ClientInterface $client */

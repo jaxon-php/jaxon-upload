@@ -5,6 +5,7 @@ namespace Jaxon\Upload\Tests\TestUpload;
 use Jaxon\Jaxon;
 use Jaxon\Exception\RequestException;
 use Jaxon\Exception\SetupException;
+use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use Nyholm\Psr7\UploadedFile;
 use Nyholm\Psr7Server\ServerRequestCreator;
 use Psr\Http\Message\ServerRequestInterface;
@@ -139,6 +140,10 @@ class UploadFsLocalTest extends TestCase
         jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.default.storage', 'memory');
         jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
+
+        // In memory file system adapter
+        jaxon()->upload()->registerStorageAdapter('memory',
+            fn() => new InMemoryFilesystemAdapter());
 
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
