@@ -59,7 +59,7 @@ function registerUpload(): void
 
         return new UploadManager($c->g(LoggerInterface::class), $c->g(Validator::class),
             $xTranslator, $c->g(FileStorage::class),
-            $c->g(FileNameInterface::class), $c->g(ConfigManager::class));
+            $c->g(FileNameInterface::class));
     });
     // File upload plugin
     $di->set(UploadHandler::class, function($c) {

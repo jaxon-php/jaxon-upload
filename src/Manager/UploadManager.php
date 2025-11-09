@@ -14,16 +14,13 @@
 
 namespace Jaxon\Upload\Manager;
 
-use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
 use Jaxon\Exception\RequestException;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
-use League\Flysystem\Visibility;
 use Nyholm\Psr7\UploadedFile;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
-
 use Closure;
 
 use function call_user_func;
@@ -44,13 +41,6 @@ class UploadManager
      * @var Closure
      */
     protected $cNameSanitizer = null;
-
-    /**
-     * A flat list of all uploaded files
-     *
-     * @var array
-     */
-    private $aAllFiles = [];
 
     /**
      * @var array
@@ -74,12 +64,10 @@ class UploadManager
      * @param Translator $xTranslator
      * @param FileStorage $xFileStorage
      * @param FileNameInterface $xFileName
-     * @param ConfigManager $xConfigManager
      */
     public function __construct(private LoggerInterface $xLogger,
         private Validator $xValidator, private Translator $xTranslator,
-        private FileStorage $xFileStorage, private FileNameInterface $xFileName,
-        private ConfigManager $xConfigManager)
+        private FileStorage $xFileStorage, private FileNameInterface $xFileName)
     {
         // This feature is not yet implemented
         $this->setUploadFieldId('');
@@ -156,7 +144,8 @@ class UploadManager
      */
     private function getUploadDir(string $sField): string
     {
-        return $this->_makeUploadDir($this->xFileStorage->filesystem($sField), $this->randomName() . '/');
+        $xFileSystem = $this->xFileStorage->filesystem($sField);
+        return $this->_makeUploadDir($xFileSystem, $this->randomName() . '/');
     }
 
     /**
@@ -166,10 +155,10 @@ class UploadManager
      * @param string $sUploadDir
      * @param string $sField
      *
-     * @return File
+     * @return array
      * @throws RequestException
      */
-    private function makeUploadedFile(UploadedFile $xHttpFile, string $sUploadDir, string $sField): File
+    private function makeUploadedFile(UploadedFile $xHttpFile, string $sUploadDir, string $sField): array
     {
         // Check the uploaded file validity
         $nErrorCode = $xHttpFile->getError();
@@ -179,14 +168,18 @@ class UploadManager
                 'code' => $nErrorCode,
                 'message' => $this->errorMessages[$nErrorCode],
             ]);
-            throw new RequestException($this->xTranslator->trans('errors.upload.failed', ['name' => $sField]));
+            $sMessage = $this->xTranslator->trans('errors.upload.failed', [
+                'name' => $sField,
+            ]);
+            throw new RequestException($sMessage);
         }
 
         // Filename without the extension. Needs to be sanitized.
         $sName = pathinfo($xHttpFile->getClientFilename(), PATHINFO_FILENAME);
         if($this->cNameSanitizer !== null)
         {
-            $sName = (string)call_user_func($this->cNameSanitizer, $sName, $sField, $this->sUploadFieldId);
+            $sName = (string)call_user_func($this->cNameSanitizer,
+                $sName, $sField, $this->sUploadFieldId);
         }
 
         // Set the user file data
@@ -198,8 +191,7 @@ class UploadManager
         }
 
         // All's right, save the file for copy.
-        $this->aAllFiles[] = ['temp' => $xHttpFile, 'user' => $xFile];
-        return $xFile;
+        return ['temp' => $xHttpFile, 'user' => $xFile];
     }
 
     /**
@@ -216,7 +208,7 @@ class UploadManager
         $aTempFiles = $xRequest->getUploadedFiles();
 
         $aUserFiles = [];
-        $this->aAllFiles = []; // A flat list of all uploaded files
+        $aAllFiles = []; // A flat list of all uploaded files
         foreach($aTempFiles as $sField => $aFiles)
         {
             $aUserFiles[$sField] = [];
@@ -228,15 +220,20 @@ class UploadManager
             }
             foreach($aFiles as $xHttpFile)
             {
-                $aUserFiles[$sField][] = $this->makeUploadedFile($xHttpFile, $sUploadDir, $sField);
+                $aFile = $this->makeUploadedFile($xHttpFile, $sUploadDir, $sField);
+                $aUserFiles[$sField][] = $aFile['user'];
+                $aAllFiles[] = $aFile;
             }
         }
+
         // Copy the uploaded files from the temp dir to the user dir
         try
         {
-            foreach($this->aAllFiles as $aFiles)
+            foreach($aAllFiles as $aFiles)
             {
-                $aFiles['user']->filesystem()->write($aFiles['user']->path(), $aFiles['temp']->getStream());
+                $sPath = $aFiles['user']->path();
+                $xContent = $aFiles['temp']->getStream();
+                $aFiles['user']->filesystem()->write($sPath, $xContent);
             }
         }
         catch(FilesystemException $e)
@@ -244,6 +241,7 @@ class UploadManager
             $this->xLogger->error('Filesystem error.', ['message' => $e->getMessage()]);
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
+
         return $aUserFiles;
     }
 }
