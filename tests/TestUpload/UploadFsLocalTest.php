@@ -93,6 +93,7 @@ class UploadFsLocalTest extends TestCase
     {
         jaxon()->setOption('core.upload.enabled', false);
         jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
+        jaxon()->di()->getBootstrap()->onBoot();
 
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
@@ -115,6 +116,7 @@ class UploadFsLocalTest extends TestCase
     {
         jaxon()->setOption('core.upload.enabled', false);
         jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
+        jaxon()->di()->getBootstrap()->onBoot();
 
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
@@ -140,6 +142,7 @@ class UploadFsLocalTest extends TestCase
         jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.default.storage', 'memory');
         jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
+        jaxon()->di()->getBootstrap()->onBoot();
 
         // In memory file system adapter
         jaxon()->upload()->registerStorageAdapter('memory',

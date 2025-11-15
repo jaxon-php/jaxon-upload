@@ -73,6 +73,7 @@ class UploadTest extends TestCase
         @copy($sSrcBlue, $this->sPathBlue);
 
         jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
+        jaxon()->di()->getBootstrap()->onBoot();
     }
 
     /**
