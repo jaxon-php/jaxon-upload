@@ -23,6 +23,11 @@ use function random_bytes;
 function registerUpload(): void
 {
     $jaxon = jaxon();
+    if(!$jaxon->getOption('upload.enabled') && !$jaxon->getOption('core.upload.enabled'))
+    {
+        return;
+    }
+
     $di = $jaxon->di();
     if($di->h(UploadHandler::class))
     {
@@ -89,12 +94,7 @@ function registerUpload(): void
 function _register(): void
 {
     $jaxon = jaxon();
-    $jaxon->callback()->boot(function() use($jaxon) {
-        if($jaxon->getOption('core.upload.enabled'))
-        {
-            registerUpload();
-        }
-    });
+    $jaxon->callback()->boot(fn() => registerUpload());
 }
 
 function register()
