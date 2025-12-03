@@ -16,7 +16,7 @@ namespace Jaxon\Upload;
 
 use Jaxon\Exception\RequestException;
 use Jaxon\Request\Upload\UploadHandlerInterface;
-use Jaxon\Upload\Manager\FileStorage;
+use Jaxon\Storage\StorageManager;
 use Jaxon\Upload\Manager\UploadManager;
 use Psr\Http\Message\ServerRequestInterface;
 use Closure;
@@ -35,10 +35,10 @@ class UploadHandler implements UploadHandlerInterface
     /**
      * The constructor
      *
-     * @param FileStorage $xFileStorage
+     * @param StorageManager $xStorageManager
      * @param UploadManager $xUploadManager
      */
-    public function __construct(private FileStorage $xFileStorage,
+    public function __construct(private StorageManager $xStorageManager,
         private UploadManager $xUploadManager)
     {}
 
@@ -99,6 +99,6 @@ class UploadHandler implements UploadHandlerInterface
      */
     public function registerStorageAdapter(string $sStorage, Closure $cFactory): void
     {
-        $this->xFileStorage->registerAdapter($sStorage, $cFactory);
+        $this->xStorageManager->register($sStorage, $cFactory);
     }
 }

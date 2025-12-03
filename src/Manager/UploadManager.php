@@ -14,8 +14,10 @@
 
 namespace Jaxon\Upload\Manager;
 
+use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
 use Jaxon\Exception\RequestException;
+use Jaxon\Storage\StorageManager;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
 use Nyholm\Psr7\UploadedFile;
@@ -25,6 +27,7 @@ use Closure;
 
 use function call_user_func;
 use function is_array;
+use function is_string;
 
 class UploadManager
 {
@@ -43,6 +46,11 @@ class UploadManager
     protected $cNameSanitizer = null;
 
     /**
+     * @var array<string, Filesystem>
+     */
+    protected $aFilesystems = [];
+
+    /**
      * @var array
      */
     private $errorMessages = [
@@ -59,15 +67,16 @@ class UploadManager
     /**
      * The constructor
      *
-     * @param LoggerInterface $xLogger
      * @param Validator $xValidator
      * @param Translator $xTranslator
-     * @param FileStorage $xFileStorage
+     * @param LoggerInterface $xLogger
      * @param FileNameInterface $xFileName
+     * @param StorageManager $xStorageManager
+     * @param ConfigManager $xConfigManager
      */
-    public function __construct(private LoggerInterface $xLogger,
-        private Validator $xValidator, private Translator $xTranslator,
-        private FileStorage $xFileStorage, private FileNameInterface $xFileName)
+    public function __construct(private Validator $xValidator, private Translator $xTranslator,
+        private LoggerInterface $xLogger, private FileNameInterface $xFileName,
+        private StorageManager $xStorageManager, private ConfigManager $xConfigManager)
     {
         // This feature is not yet implemented
         $this->setUploadFieldId('');
@@ -135,6 +144,36 @@ class UploadManager
     }
 
     /**
+     * @param string $sField
+     *
+     * @return Filesystem
+     * @throws RequestException
+     */
+    public function filesystem(string $sField = ''): Filesystem
+    {
+        $sField = trim($sField);
+        if(isset($this->aFilesystems[$sField]))
+        {
+            return $this->aFilesystems[$sField];
+        }
+
+        // Default upload dir
+        $sStorage = $this->xConfigManager->getOption('upload.default.storage', 'upload');
+        $sConfigKey = "upload.files.$sField";
+        if($sField !== '' && $this->xConfigManager->hasOption($sConfigKey))
+        {
+            $sStorage = $this->xConfigManager->getOption("$sConfigKey.storage", $sStorage);
+        }
+        if(!is_string($sStorage))
+        {
+            throw new RequestException($this->xTranslator->trans('errors.upload.adapter'));
+        }
+
+        $this->aFilesystems[$sField] = $this->xStorageManager->get($sStorage);
+        return $this->aFilesystems[$sField];
+    }
+
+    /**
      * Get the path to the upload dir
      *
      * @param string $sField
@@ -144,7 +183,7 @@ class UploadManager
      */
     private function getUploadDir(string $sField): string
     {
-        $xFileSystem = $this->xFileStorage->filesystem($sField);
+        $xFileSystem = $this->filesystem($sField);
         return $this->_makeUploadDir($xFileSystem, $this->randomName() . '/');
     }
 
@@ -183,7 +222,7 @@ class UploadManager
         }
 
         // Set the user file data
-        $xFile = File::fromHttpFile($this->xFileStorage->filesystem($sField), $xHttpFile, $sUploadDir, $sName);
+        $xFile = File::fromHttpFile($this->filesystem($sField), $xHttpFile, $sUploadDir, $sName);
         // Verify file validity (format, size)
         if(!$this->xValidator->validateUploadedFile($sField, $xFile))
         {

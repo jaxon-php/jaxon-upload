@@ -12,7 +12,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use PHPUnit\Framework\TestCase;
 
 use function Jaxon\jaxon;
-use function Jaxon\Upload\_register;
+use function Jaxon\Storage\_register as _registerStorage;
+use function Jaxon\Upload\_register as _registerUpload;
 use function copy;
 use function filesize;
 use function mkdir;
@@ -56,8 +57,15 @@ class UploadFsLocalTest extends TestCase
     {
         jaxon()->di()->getPluginManager()->registerPlugins();
         jaxon()->setOption('core.response.send', false);
-        jaxon()->setOption('upload.default.dir', __DIR__ . '/../upload/dst');
-        _register();
+        jaxon()->setOption('upload.default.storage', 'uploads');
+        jaxon()->config()->setAppOptions([
+            'adapter' => 'local',
+            'dir' => __DIR__ . '/../upload/dst',
+            // 'options' => [],
+        ], 'storage.uploads');
+
+        _registerStorage();
+        _registerUpload();
 
         $tmpDir = __DIR__ . '/../upload/tmp';
         @mkdir($tmpDir);
@@ -141,6 +149,12 @@ class UploadFsLocalTest extends TestCase
     {
         jaxon()->setOption('core.upload.enabled', true);
         jaxon()->setOption('upload.default.storage', 'memory');
+        jaxon()->config()->setAppOptions([
+            'adapter' => 'memory',
+            'dir' => __DIR__ . '/../upload/dst',
+            // 'options' => [],
+        ], 'storage.memory');
+
         jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
         jaxon()->di()->getBootstrap()->onBoot();
 

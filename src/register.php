@@ -5,8 +5,8 @@ namespace Jaxon\Upload;
 use Jaxon\App\Config\ConfigManager;
 use Jaxon\App\I18n\Translator;
 use Jaxon\Request\Upload\UploadHandlerInterface;
+use Jaxon\Storage\StorageManager;
 use Jaxon\Upload\Manager\FileNameInterface;
-use Jaxon\Upload\Manager\FileStorage;
 use Jaxon\Upload\Manager\UploadManager;
 use Jaxon\Upload\Manager\Validator;
 use Psr\Log\LoggerInterface;
@@ -44,14 +44,11 @@ function registerUpload(): void
             }
         };
     });
+
     // Upload validator
-    $di->set(Validator::class, function($c) {
-        return new Validator($c->g(ConfigManager::class), $c->g(Translator::class));
-    });
-    // File storage
-    $di->set(FileStorage::class, function($c) {
-        return  new FileStorage($c->g(ConfigManager::class), $c->g(Translator::class));
-    });
+    $di->set(Validator::class, fn($c) =>
+        new Validator($c->g(ConfigManager::class), $c->g(Translator::class)));
+
     // File upload manager
     $di->set(UploadManager::class, function($c) {
         // Translation directory
@@ -62,14 +59,14 @@ function registerUpload(): void
         $xTranslator->loadTranslations("$sTranslationDir/fr/upload.php", 'fr');
         $xTranslator->loadTranslations("$sTranslationDir/es/upload.php", 'es');
 
-        return new UploadManager($c->g(LoggerInterface::class), $c->g(Validator::class),
-            $xTranslator, $c->g(FileStorage::class),
-            $c->g(FileNameInterface::class));
+        return new UploadManager($c->g(Validator::class), $xTranslator,
+            $c->g(LoggerInterface::class), $c->g(FileNameInterface::class),
+            $c->g(StorageManager::class), $c->g(ConfigManager::class));
     });
+
     // File upload plugin
-    $di->set(UploadHandler::class, function($c) {
-        return new UploadHandler($c->g(FileStorage::class), $c->g(UploadManager::class));
-    });
+    $di->set(UploadHandler::class, fn($c) =>
+        new UploadHandler($c->g(StorageManager::class), $c->g(UploadManager::class)));
     // Set alias on the interface
     $di->alias(UploadHandlerInterface::class, UploadHandler::class);
 
