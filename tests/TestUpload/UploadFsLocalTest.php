@@ -57,8 +57,8 @@ class UploadFsLocalTest extends TestCase
     {
         jaxon()->di()->getPluginManager()->registerPlugins();
         jaxon()->setOption('core.response.send', false);
-        jaxon()->setOption('upload.default.storage', 'uploads');
-        jaxon()->config()->setAppOptions([
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOptions([
             'adapter' => 'local',
             'dir' => __DIR__ . '/../upload/dst',
             // 'options' => [],
@@ -99,7 +99,7 @@ class UploadFsLocalTest extends TestCase
      */
     public function testHttpUploadDisabled()
     {
-        jaxon()->setOption('core.upload.enabled', false);
+        jaxon()->setAppOption('upload.enabled', false);
         jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
         jaxon()->di()->getBootstrap()->onBoot();
 
@@ -122,7 +122,7 @@ class UploadFsLocalTest extends TestCase
      */
     public function testRequestWithNoPluginNoUpload()
     {
-        jaxon()->setOption('core.upload.enabled', false);
+        jaxon()->setAppOption('upload.enabled', false);
         jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
         jaxon()->di()->getBootstrap()->onBoot();
 
@@ -147,9 +147,9 @@ class UploadFsLocalTest extends TestCase
      */
     public function testUploadInMemoryStorage()
     {
-        jaxon()->setOption('core.upload.enabled', true);
-        jaxon()->setOption('upload.default.storage', 'memory');
-        jaxon()->config()->setAppOptions([
+        jaxon()->setAppOption('upload.enabled', true);
+        jaxon()->setAppOption('upload.default.storage', 'memory');
+        jaxon()->setAppOptions([
             'adapter' => 'memory',
             'dir' => __DIR__ . '/../upload/dst',
             // 'options' => [],

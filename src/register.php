@@ -23,7 +23,7 @@ use function random_bytes;
 function registerUpload(): void
 {
     $jaxon = jaxon();
-    if(!$jaxon->getOption('upload.enabled') && !$jaxon->getOption('core.upload.enabled'))
+    if(!$jaxon->getAppOption('upload.enabled'))
     {
         return;
     }

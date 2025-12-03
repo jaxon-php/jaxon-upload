@@ -81,8 +81,8 @@ class Validator
      */
     private function validateFileProperty(string $sVarName, string $sValue, string $sProperty, string $sField): bool
     {
-        $xDefault = $this->xConfigManager->getOption('upload.default.' . $sProperty);
-        $aAllowed = $this->xConfigManager->getOption('upload.files.' . $sVarName . '.' . $sProperty, $xDefault);
+        $xDefault = $this->xConfigManager->getAppOption('upload.default.' . $sProperty);
+        $aAllowed = $this->xConfigManager->getAppOption('upload.files.' . $sVarName . '.' . $sProperty, $xDefault);
         if(is_array($aAllowed) && !in_array($sValue, $aAllowed))
         {
             $this->sErrorMessage = $this->xTranslator->trans('errors.upload.' . $sField, [$sField => $sValue]);
@@ -102,8 +102,8 @@ class Validator
      */
     private function validateFileSize(string $sVarName, int $nFileSize, string $sProperty): bool
     {
-        $xDefault = $this->xConfigManager->getOption('upload.default.' . $sProperty, 0);
-        $nSize = $this->xConfigManager->getOption('upload.files.' . $sVarName . '.' . $sProperty, $xDefault);
+        $xDefault = $this->xConfigManager->getAppOption('upload.default.' . $sProperty, 0);
+        $nSize = $this->xConfigManager->getAppOption('upload.files.' . $sVarName . '.' . $sProperty, $xDefault);
         if($nSize > 0 && (
             ($sProperty == 'max-size' && $nFileSize > $nSize) ||
             ($sProperty == 'min-size' && $nFileSize < $nSize)))

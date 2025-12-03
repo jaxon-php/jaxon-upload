@@ -158,11 +158,11 @@ class UploadManager
         }
 
         // Default upload dir
-        $sStorage = $this->xConfigManager->getOption('upload.default.storage', 'upload');
+        $sStorage = $this->xConfigManager->getAppOption('upload.default.storage', 'upload');
         $sConfigKey = "upload.files.$sField";
         if($sField !== '' && $this->xConfigManager->hasOption($sConfigKey))
         {
-            $sStorage = $this->xConfigManager->getOption("$sConfigKey.storage", $sStorage);
+            $sStorage = $this->xConfigManager->getAppOption("$sConfigKey.storage", $sStorage);
         }
         if(!is_string($sStorage))
         {

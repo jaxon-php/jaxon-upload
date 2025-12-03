@@ -54,8 +54,8 @@ class UploadTest extends TestCase
     {
         _registerStorage();
         _registerUpload();
-        jaxon()->setOption('core.upload.enabled', true);
-        jaxon()->config()->setAppOptions([
+        jaxon()->setAppOption('upload.enabled', true);
+        jaxon()->setAppOptions([
             'adapter' => 'local',
             'dir' => __DIR__ . '/../upload/dst',
             // 'options' => [],
@@ -97,7 +97,7 @@ class UploadTest extends TestCase
      */
     public function testAjaxUpload()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -137,7 +137,7 @@ class UploadTest extends TestCase
      */
     public function testAjaxUploadMultipleFiles()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -186,7 +186,7 @@ class UploadTest extends TestCase
      */
     public function testAjaxUploadMultipleNames()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -238,7 +238,7 @@ class UploadTest extends TestCase
      */
     public function testAjaxUploadNameSanitizer()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
         jaxon()->upload()->sanitizer(function($sFilename, $sVarName) {
             return $sVarName === 'image' ? 'img_' . $sFilename : $sFilename;
         });
@@ -281,8 +281,8 @@ class UploadTest extends TestCase
      */
     public function testUploadFileTypeValidationOk()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
-        jaxon()->setOption('upload.default.types', ['png']);
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.types', ['png']);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -319,8 +319,8 @@ class UploadTest extends TestCase
      */
     public function testUploadFileTypeValidationError()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
-        jaxon()->setOption('upload.default.types', ['jpg']);
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.types', ['jpg']);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -351,8 +351,8 @@ class UploadTest extends TestCase
      */
     public function testUploadFileExtensionValidationOk()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
-        jaxon()->setOption('upload.default.extensions', ['png']);
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.extensions', ['png']);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -390,8 +390,8 @@ class UploadTest extends TestCase
      */
     public function testUploadFileExtensionValidationError()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
-        jaxon()->setOption('upload.default.extensions', ['jpg']);
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.extensions', ['jpg']);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -422,8 +422,8 @@ class UploadTest extends TestCase
      */
     public function testUploadFileMaxSizeValidationOk()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
-        jaxon()->setOption('upload.default.max-size', 30000);
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.max-size', 30000);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -461,8 +461,8 @@ class UploadTest extends TestCase
      */
     public function testUploadFileMaxSizeValidationError()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
-        jaxon()->setOption('upload.default.max-size', 25000);
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.max-size', 25000);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -493,8 +493,8 @@ class UploadTest extends TestCase
      */
     public function testUploadFileMinSizeValidationOk()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
-        jaxon()->setOption('upload.default.min-size', 25000);
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.min-size', 25000);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -532,8 +532,8 @@ class UploadTest extends TestCase
      */
     public function testUploadFileMinSizeValidationError()
     {
-        jaxon()->setOption('upload.default.storage', 'uploads');
-        jaxon()->setOption('upload.default.min-size', 30000);
+        jaxon()->setAppOption('upload.default.storage', 'uploads');
+        jaxon()->setAppOption('upload.default.min-size', 30000);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
@@ -564,7 +564,7 @@ class UploadTest extends TestCase
      */
     public function testRequestWithNoPluginNoUpload()
     {
-        jaxon()->setOption('core.upload.enabled', false);
+        jaxon()->setAppOption('upload.enabled', false);
         // Send a request to the registered class
         jaxon()->di()->set(ServerRequestInterface::class, function($c) {
             return $c->g(ServerRequestCreator::class)
