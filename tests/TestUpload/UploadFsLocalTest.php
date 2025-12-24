@@ -62,7 +62,7 @@ class UploadFsLocalTest extends TestCase
             'adapter' => 'local',
             'dir' => __DIR__ . '/../upload/dst',
             // 'options' => [],
-        ], 'storage.uploads');
+        ], 'storage.stores.uploads');
 
         _registerStorage();
         _registerUpload();
@@ -153,7 +153,7 @@ class UploadFsLocalTest extends TestCase
             'adapter' => 'memory',
             'dir' => __DIR__ . '/../upload/dst',
             // 'options' => [],
-        ], 'storage.memory');
+        ], 'storage.stores.memory');
 
         jaxon()->register(Jaxon::CALLABLE_CLASS, 'SampleUpload', __DIR__ . '/../src/sample.php');
         jaxon()->di()->getBootstrap()->onBoot();

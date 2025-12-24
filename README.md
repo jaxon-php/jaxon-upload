@@ -16,4 +16,4 @@ This package provides file upload support for the Jaxon library.
 The [Flysystem package](https://flysystem.thephpleague.com) is used to store the uploaded files.
 They can then be saved on the local file system, AWS S3, Google Cloud, FTP, or any other storage system with a Flysystem adapter.
 
-See the [online documentation](https://www.jaxon-php.org/docs/v4x/features/upload.html) for more information.
+See the [online documentation](https://www.jaxon-php.org/docs/v5x/features/upload.html) for more information.

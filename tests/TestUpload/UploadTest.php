@@ -59,7 +59,7 @@ class UploadTest extends TestCase
             'adapter' => 'local',
             'dir' => __DIR__ . '/../upload/dst',
             // 'options' => [],
-        ], 'storage.uploads');
+        ], 'storage.stores.uploads');
 
         jaxon()->setOption('core.response.send', false);
         $tmpDir = __DIR__ . '/../upload/tmp';
@@ -92,9 +92,6 @@ class UploadTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testAjaxUpload()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -132,9 +129,6 @@ class UploadTest extends TestCase
         $this->assertEquals('png', $xFile->extension());
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testAjaxUploadMultipleFiles()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -181,9 +175,6 @@ class UploadTest extends TestCase
         $this->assertEquals('png', $xFile->extension());
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testAjaxUploadMultipleNames()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -233,9 +224,6 @@ class UploadTest extends TestCase
         $this->assertEquals('png', $xFile->extension());
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testAjaxUploadNameSanitizer()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -276,9 +264,6 @@ class UploadTest extends TestCase
         $this->assertEquals($this->sNameWhite, $xFile->filename());
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testUploadFileTypeValidationOk()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -314,9 +299,6 @@ class UploadTest extends TestCase
         $this->assertEquals($this->sNameWhite, $xFile->filename());
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testUploadFileTypeValidationError()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -346,9 +328,6 @@ class UploadTest extends TestCase
         jaxon()->processRequest();
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testUploadFileExtensionValidationOk()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -385,9 +364,6 @@ class UploadTest extends TestCase
         $this->assertEquals($this->sNameWhite, $xFile->filename());
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testUploadFileExtensionValidationError()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -417,9 +393,6 @@ class UploadTest extends TestCase
         jaxon()->processRequest();
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testUploadFileMaxSizeValidationOk()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -456,9 +429,6 @@ class UploadTest extends TestCase
         $this->assertEquals($this->sNameWhite, $xFile->filename());
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testUploadFileMaxSizeValidationError()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -488,9 +458,6 @@ class UploadTest extends TestCase
         jaxon()->processRequest();
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testUploadFileMinSizeValidationOk()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -527,9 +494,6 @@ class UploadTest extends TestCase
         $this->assertEquals($this->sNameWhite, $xFile->filename());
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testUploadFileMinSizeValidationError()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
@@ -559,9 +523,6 @@ class UploadTest extends TestCase
         jaxon()->processRequest();
     }
 
-    /**
-     * @throws RequestException
-     */
     public function testRequestWithNoPluginNoUpload()
     {
         jaxon()->setAppOption('upload.enabled', false);

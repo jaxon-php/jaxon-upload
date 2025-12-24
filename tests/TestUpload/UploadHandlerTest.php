@@ -66,7 +66,7 @@ class UploadHandlerTest extends TestCase
             'adapter' => 'local',
             'dir' => __DIR__ . '/../upload/dst',
             // 'options' => [],
-        ], 'storage.uploads');
+        ], 'storage.stores.uploads');
 
         $tmpDir = __DIR__ . '/../upload/tmp';
         @mkdir($tmpDir);
