@@ -14,7 +14,6 @@ use Psr\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 
 use function Jaxon\jaxon;
-use function Jaxon\Storage\_register as _registerStorage;
 use function Jaxon\Upload\_register as _registerUpload;
 use function copy;
 use function filesize;
@@ -58,8 +57,8 @@ class UploadHandlerTest extends TestCase
     public function setUp(): void
     {
         jaxon()->di()->getPluginManager()->registerPlugins();
-        _registerStorage();
         _registerUpload();
+
         jaxon()->setOption('core.response.send', false);
         jaxon()->setAppOption('upload.enabled', true);
         jaxon()->setAppOptions([
@@ -572,7 +571,6 @@ class UploadHandlerTest extends TestCase
      */
     public function testPsrAjaxUpload()
     {
-        _registerStorage();
         _registerUpload();
         jaxon()->setAppOption('upload.enabled', true);
         jaxon()->setAppOption('upload.default.storage', 'uploads');

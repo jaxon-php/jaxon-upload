@@ -12,7 +12,6 @@ use PHPUnit\Framework\TestCase;
 
 use function Jaxon\jaxon;
 use function filesize;
-use function Jaxon\Storage\_register as _registerStorage;
 use function Jaxon\Upload\_register as _registerUpload;
 
 class UploadTest extends TestCase
@@ -52,8 +51,8 @@ class UploadTest extends TestCase
      */
     public function setUp(): void
     {
-        _registerStorage();
         _registerUpload();
+
         jaxon()->setAppOption('upload.enabled', true);
         jaxon()->setAppOptions([
             'adapter' => 'local',

@@ -12,7 +12,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use PHPUnit\Framework\TestCase;
 
 use function Jaxon\jaxon;
-use function Jaxon\Storage\_register as _registerStorage;
 use function Jaxon\Upload\_register as _registerUpload;
 use function copy;
 use function filesize;
@@ -64,7 +63,6 @@ class UploadFsLocalTest extends TestCase
             // 'options' => [],
         ], 'storage.stores.uploads');
 
-        _registerStorage();
         _registerUpload();
 
         $tmpDir = __DIR__ . '/../upload/tmp';
