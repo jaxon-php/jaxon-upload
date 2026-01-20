@@ -104,8 +104,8 @@ class UploadHandlerTest extends TestCase
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -119,8 +119,7 @@ class UploadHandlerTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -144,8 +143,8 @@ class UploadHandlerTest extends TestCase
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -163,8 +162,7 @@ class UploadHandlerTest extends TestCase
                             UPLOAD_ERR_OK, $this->sNameBlue, 'png'),
                     ],
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -193,8 +191,8 @@ class UploadHandlerTest extends TestCase
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -214,8 +212,7 @@ class UploadHandlerTest extends TestCase
                             UPLOAD_ERR_OK, $this->sNameBlue, 'png'),
                     ],
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -244,12 +241,11 @@ class UploadHandlerTest extends TestCase
     public function testAjaxUploadNameSanitizer()
     {
         jaxon()->setAppOption('upload.default.storage', 'uploads');
-        jaxon()->upload()->sanitizer(function($sFilename, $sVarName) {
-            return $sVarName === 'image' ? 'img_' . $sFilename : $sFilename;
-        });
+        jaxon()->upload()->sanitizer(fn($sFilename, $sVarName) =>
+            $sVarName === 'image' ? "img_$sFilename" : $sFilename);
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -263,8 +259,7 @@ class UploadHandlerTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -289,8 +284,8 @@ class UploadHandlerTest extends TestCase
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         jaxon()->setAppOption('upload.default.types', ['png']);
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -304,8 +299,7 @@ class UploadHandlerTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -328,8 +322,8 @@ class UploadHandlerTest extends TestCase
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         jaxon()->setAppOption('upload.default.types', ['jpg']);
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -343,8 +337,7 @@ class UploadHandlerTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -360,8 +353,8 @@ class UploadHandlerTest extends TestCase
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         jaxon()->setAppOption('upload.default.extensions', ['png']);
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -375,8 +368,7 @@ class UploadHandlerTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -399,8 +391,8 @@ class UploadHandlerTest extends TestCase
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         jaxon()->setAppOption('upload.default.extensions', ['jpg']);
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -414,8 +406,7 @@ class UploadHandlerTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -431,8 +422,8 @@ class UploadHandlerTest extends TestCase
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         jaxon()->setAppOption('upload.default.max-size', 30000);
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -446,8 +437,7 @@ class UploadHandlerTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -470,8 +460,8 @@ class UploadHandlerTest extends TestCase
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         jaxon()->setAppOption('upload.default.max-size', 25000);
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -485,8 +475,7 @@ class UploadHandlerTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -502,8 +491,8 @@ class UploadHandlerTest extends TestCase
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         jaxon()->setAppOption('upload.default.min-size', 25000);
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -517,8 +506,7 @@ class UploadHandlerTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
@@ -541,8 +529,8 @@ class UploadHandlerTest extends TestCase
         jaxon()->setAppOption('upload.default.storage', 'uploads');
         jaxon()->setAppOption('upload.default.min-size', 30000);
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -556,8 +544,7 @@ class UploadHandlerTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));

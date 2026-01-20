@@ -35,15 +35,14 @@ function registerUpload(): void
     }
 
     // Upload file and dir name generator
-    $di->set(FileNameInterface::class, function() {
-        return new class implements FileNameInterface
+    $di->set(FileNameInterface::class, fn() =>
+        new class implements FileNameInterface
         {
             public function random(int $nLength): string
             {
                 return bin2hex(random_bytes((int)($nLength / 2)));
             }
-        };
-    });
+        });
 
     // Upload validator
     $di->set(Validator::class, fn($c) =>

@@ -102,15 +102,14 @@ class UploadFsLocalTest extends TestCase
         jaxon()->di()->getBootstrap()->onBoot();
 
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withUploadedFiles([
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertFalse(jaxon()->di()->getRequestHandler()->canProcessRequest());
     }
@@ -125,8 +124,8 @@ class UploadFsLocalTest extends TestCase
         jaxon()->di()->getBootstrap()->onBoot();
 
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -134,8 +133,7 @@ class UploadFsLocalTest extends TestCase
                         'args' => [],
                     ]),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertFalse(jaxon()->di()->getRequestHandler()->canProcessRequest());
     }
@@ -161,8 +159,8 @@ class UploadFsLocalTest extends TestCase
             fn() => new InMemoryFilesystemAdapter());
 
         // Send a request to the registered class
-        jaxon()->di()->set(ServerRequestInterface::class, function($c) {
-            return $c->g(ServerRequestCreator::class)
+        jaxon()->di()->set(ServerRequestInterface::class, fn($c) =>
+            $c->g(ServerRequestCreator::class)
                 ->fromGlobals()
                 ->withParsedBody([
                     'jxncall' => json_encode([
@@ -176,8 +174,7 @@ class UploadFsLocalTest extends TestCase
                     'image' => new UploadedFile($this->sPathWhite, $this->sSizeWhite,
                         UPLOAD_ERR_OK, $this->sNameWhite, 'png'),
                 ])
-                ->withMethod('POST');
-        });
+                ->withMethod('POST'));
 
         $this->assertTrue(jaxon()->di()->getRequestHandler()->canProcessRequest());
         $this->assertTrue(jaxon()->di()->getUploadHandler()->canProcessRequest(jaxon()->di()->getRequest()));
