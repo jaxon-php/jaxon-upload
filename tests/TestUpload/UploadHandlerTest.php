@@ -565,7 +565,7 @@ class UploadHandlerTest extends TestCase
             'adapter' => 'local',
             'dir' => __DIR__ . '/../upload/dst',
             // 'options' => [],
-        ], 'storage.uploads');
+        ], 'storage.stores.uploads');
 
         // Send a request to the registered class
         $xRequest = jaxon()->di()->g(ServerRequestCreator::class)
