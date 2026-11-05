@@ -9,6 +9,8 @@ use Jaxon\Storage\StorageManager;
 use Jaxon\Upload\Manager\FileNameInterface;
 use Jaxon\Upload\Manager\UploadManager;
 use Jaxon\Upload\Manager\Validator;
+use Jaxon\Upload\Psr7\UploadedFileFactory;
+use Psr\Http\Message\UploadedFileFactoryInterface;
 use Psr\Log\LoggerInterface;
 
 use function Jaxon\jaxon;
@@ -68,6 +70,8 @@ function registerUpload(): void
         new UploadHandler($c->g(StorageManager::class), $c->g(UploadManager::class)));
     // Set alias on the interface
     $di->alias(UploadHandlerInterface::class, UploadHandler::class);
+    // Custom uploaded file factory
+    $di->set(UploadedFileFactoryInterface::class, fn() => new UploadedFileFactory());
 
     // Set a callback to process uploaded files in the incoming requests.
     $jaxon->callback()->before(function() use($di) {
