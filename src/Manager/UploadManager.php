@@ -20,35 +20,28 @@ use Jaxon\Exception\RequestException;
 use Jaxon\Storage\StorageManager;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
-use Nyholm\Psr7\UploadedFile;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use Closure;
 
-use function call_user_func;
+use function array_map;
+use function fclose;
 use function is_array;
+use function is_resource;
 use function is_string;
+use function pathinfo;
+use function rtrim;
+use function trim;
 
 class UploadManager
 {
-    /**
-     * The id of the upload field in the form
-     *
-     * @var string
-     */
-    protected $sUploadFieldId = '';
-
     /**
      * A user defined function to transform uploaded file names
      *
      * @var Closure
      */
     protected $cNameSanitizer = null;
-
-    /**
-     * @var array<string, Filesystem>
-     */
-    protected $aFilesystems = [];
 
     /**
      * @var array
@@ -65,8 +58,6 @@ class UploadManager
     ];
 
     /**
-     * The constructor
-     *
      * @param Validator $xValidator
      * @param Translator $xTranslator
      * @param LoggerInterface $xLogger
@@ -77,32 +68,7 @@ class UploadManager
     public function __construct(private Validator $xValidator, private Translator $xTranslator,
         private LoggerInterface $xLogger, private FileNameInterface $xFileName,
         private StorageManager $xStorageManager, private ConfigManager $xConfigManager)
-    {
-        // This feature is not yet implemented
-        $this->setUploadFieldId('');
-    }
-
-    /**
-     * Generate a random name
-     *
-     * @return string
-     */
-    protected function randomName(): string
-    {
-        return $this->xFileName->random(16);
-    }
-
-    /**
-     * Set the id of the upload field in the form
-     *
-     * @param string $sUploadFieldId
-     *
-     * @return void
-     */
-    public function setUploadFieldId(string $sUploadFieldId): void
-    {
-        $this->sUploadFieldId = $sUploadFieldId;
-    }
+    {}
 
     /**
      * Filter uploaded file name
@@ -117,24 +83,76 @@ class UploadManager
     }
 
     /**
-     * Make sure the upload dir exists and is writable
+     * @param string $sField
+     * @param string $sOption
+     * @param mixed $xDefault
      *
-     * @param Filesystem $xFilesystem
-     * @param string $sUploadDir
+     * @return mixed
+     */
+    private function uploadOption(string $sField, string $sOption, mixed $xDefault): mixed
+    {
+        return $this->xConfigManager->getAppOption("upload.files.$sField.$sOption",
+            $this->xConfigManager->getAppOption("upload.default.$sOption", $xDefault));
+    }
+
+    /**
+     * Verify the uploaded file validity (format, size)
      *
-     * @return string
+     * @param string $sField
+     * @param File $xFile
+     *
+     * @return void
      * @throws RequestException
      */
-    private function _makeUploadDir(Filesystem $xFilesystem, string $sUploadDir): string
+    private function validate(string $sField, File $xFile): void
     {
+        if(!$this->xValidator->validateUploadedFile($sField, $xFile))
+        {
+            throw new RequestException($this->xValidator->getErrorMessage());
+        }
+    }
+
+    /**
+     * Copy the uploaded files from the temp dir to the user dir
+     *
+     * @param string $sField
+     * @param UploadedFileInterface $xTempFile
+     * @param File $xFile
+     *
+     * @return bool
+     * @throws RequestException
+     */
+    private function move(string $sField, UploadedFileInterface $xTempFile, File $xFile): bool
+    {
+        if(!(bool)$this->uploadOption($sField, 'move', true))
+        {
+            return false;
+        }
+
+        $sDirectory = $this->uploadOption($sField, 'directory', null);
+        if(is_string($sDirectory))
+        {
+            $xTempFile->moveTo(rtrim($sDirectory, '/') . '/' . $xFile->path());
+            return true;
+        }
+
+        if(($resource = $xTempFile->getStream()->detach()) === null)
+        {
+            $this->xLogger->error('File upload error.', [
+                'message' => "Unable to get the resource for the '$sField' uploaded file.",
+            ]);
+            throw new RequestException($this->xTranslator->trans('errors.upload.access'));
+        }
         try
         {
-            $xFilesystem->createDirectory($sUploadDir);
-            if(!$xFilesystem->directoryExists($sUploadDir))
+            $xFile->filesystem()->writeStream($xFile->path(), $resource);
+            // Some FlySystem SDK’s close streams after consuming them.
+            // See: https://flysystem.thephpleague.com/v1/docs/usage/filesystem-api/
+            if(is_resource($resource))
             {
-                throw new RequestException($this->xTranslator->trans('errors.upload.access'));
+                fclose($resource);
             }
-            return $sUploadDir;
+            return true;
         }
         catch(FilesystemException $e)
         {
@@ -144,63 +162,21 @@ class UploadManager
     }
 
     /**
-     * @param string $sField
-     *
-     * @return Filesystem
-     * @throws RequestException
-     */
-    public function filesystem(string $sField = ''): Filesystem
-    {
-        $sField = trim($sField);
-        if(isset($this->aFilesystems[$sField]))
-        {
-            return $this->aFilesystems[$sField];
-        }
-
-        // Default upload dir
-        $sStorage = $this->xConfigManager->getAppOption('upload.default.storage', 'upload');
-        $sConfigKey = "upload.files.$sField";
-        if($sField !== '' && $this->xConfigManager->hasAppOption($sConfigKey))
-        {
-            $sStorage = $this->xConfigManager->getAppOption("$sConfigKey.storage", $sStorage);
-        }
-        if(!is_string($sStorage))
-        {
-            throw new RequestException($this->xTranslator->trans('errors.upload.adapter'));
-        }
-
-        $this->aFilesystems[$sField] = $this->xStorageManager->get($sStorage);
-        return $this->aFilesystems[$sField];
-    }
-
-    /**
-     * Get the path to the upload dir
-     *
-     * @param string $sField
-     *
-     * @return string
-     * @throws RequestException
-     */
-    private function getUploadDir(string $sField): string
-    {
-        $xFileSystem = $this->filesystem($sField);
-        return $this->_makeUploadDir($xFileSystem, $this->randomName() . '/');
-    }
-
-    /**
      * Check uploaded files
      *
-     * @param UploadedFile $xHttpFile
+     * @param Filesystem $xFilesystem
+     * @param UploadedFileInterface $xTempFile
      * @param string $sUploadDir
      * @param string $sField
      *
-     * @return array
+     * @return File
      * @throws RequestException
      */
-    private function makeUploadedFile(UploadedFile $xHttpFile, string $sUploadDir, string $sField): array
+    private function file(Filesystem $xFilesystem, UploadedFileInterface $xTempFile,
+        string $sUploadDir, string $sField): File
     {
         // Check the uploaded file validity
-        $nErrorCode = $xHttpFile->getError();
+        $nErrorCode = $xTempFile->getError();
         if($nErrorCode !== UPLOAD_ERR_OK)
         {
             $this->xLogger->error('File upload error.', [
@@ -214,65 +190,62 @@ class UploadManager
         }
 
         // Filename without the extension. Needs to be sanitized.
-        $sName = pathinfo($xHttpFile->getClientFilename(), PATHINFO_FILENAME);
+        $sName = pathinfo($xTempFile->getClientFilename(), PATHINFO_FILENAME);
         if($this->cNameSanitizer !== null)
         {
-            $sName = (string)call_user_func($this->cNameSanitizer,
-                $sName, $sField, $this->sUploadFieldId);
+            $sName = (string)($this->cNameSanitizer)($sName, $sField);
         }
 
         // Set the user file data
-        $xFile = File::fromHttpFile($this->filesystem($sField), $xHttpFile, $sUploadDir, $sName);
-        // Verify file validity (format, size)
-        if(!$this->xValidator->validateUploadedFile($sField, $xFile))
-        {
-            throw new RequestException($this->xValidator->getErrorMessage());
-        }
-
-        // All's right, save the file for copy.
-        return ['temp' => $xHttpFile, 'user' => $xFile];
+        return File::fromHttpFile($xFilesystem, $sUploadDir, $sName, $xTempFile,
+            fn(File $xFile) => $this->validate($sField, $xFile),
+            fn(File $xFile) => $this->move($sField, $xTempFile, $xFile));
     }
 
     /**
-     * Read uploaded files info from HTTP request data
+     * @param string $sField
      *
-     * @param ServerRequestInterface $xRequest
-     *
-     * @return array
+     * @return Filesystem
      * @throws RequestException
      */
-    public function readFromHttpData(ServerRequestInterface $xRequest): array
+    private function storage(string $sField = ''): Filesystem
     {
-        // Get the uploaded files
-        $aTempFiles = $xRequest->getUploadedFiles();
-
-        $aUserFiles = [];
-        $aAllFiles = []; // A flat list of all uploaded files
-        foreach($aTempFiles as $sField => $aFiles)
+        $sDirectory = $this->uploadOption($sField, 'directory', null);
+        if(is_string($sDirectory))
         {
-            $aUserFiles[$sField] = [];
-            // Get the path to the upload dir
-            $sUploadDir = $this->getUploadDir($sField);
-            if(!is_array($aFiles))
-            {
-                $aFiles = [$aFiles];
-            }
-            foreach($aFiles as $xHttpFile)
-            {
-                $aFile = $this->makeUploadedFile($xHttpFile, $sUploadDir, $sField);
-                $aUserFiles[$sField][] = $aFile['user'];
-                $aAllFiles[] = $aFile;
-            }
+            return $this->xStorageManager->adapter('local')->make($sDirectory);
         }
 
-        // Copy the uploaded files from the temp dir to the user dir
+        $sStorage = $this->uploadOption($sField, 'storage', null);
+        if(!is_string($sStorage))
+        {
+            throw new RequestException($this->xTranslator->trans('errors.upload.adapter'));
+        }
+
+        return $this->xStorageManager->get($sStorage);
+    }
+
+    /**
+     * Make sure the upload dir exists and is writable
+     *
+     * @param Filesystem $xFilesystem
+     * @param string $sField
+     *
+     * @return Closure
+     * @throws RequestException
+     */
+    private function processor(Filesystem $xFilesystem, string $sField): Closure
+    {
+        $sUploadDir = $this->xFileName->random(16) . '/';
         try
         {
-            foreach($aAllFiles as $aFiles)
+            if(!$xFilesystem->directoryExists($sUploadDir))
             {
-                $sPath = $aFiles['user']->path();
-                $xContent = $aFiles['temp']->getStream();
-                $aFiles['user']->filesystem()->write($sPath, $xContent);
+                $xFilesystem->createDirectory($sUploadDir);
+            }
+            if(!$xFilesystem->directoryExists($sUploadDir))
+            {
+                throw new RequestException($this->xTranslator->trans('errors.upload.access'));
             }
         }
         catch(FilesystemException $e)
@@ -281,6 +254,31 @@ class UploadManager
             throw new RequestException($this->xTranslator->trans('errors.upload.access'));
         }
 
+        return fn(UploadedFileInterface $xTempFile) =>
+            $this->file($xFilesystem, $xTempFile, $sUploadDir, $sField);
+    }
+
+    /**
+     * Read uploaded files info from HTTP request data
+     *
+     * @param ServerRequestInterface $xRequest
+     *
+     * @return array<string, File>
+     * @throws RequestException
+     */
+    public function readFromHttpData(ServerRequestInterface $xRequest): array
+    {
+        // Get the uploaded files
+        $aUserFiles = [];
+        foreach($xRequest->getUploadedFiles() as $sField => $aFiles)
+        {
+            $sField = trim($sField);
+            // Get the path to the upload dir
+            $aUserFiles[$sField] = array_map(
+                $this->processor($this->storage($sField), $sField),
+                is_array($aFiles) ? $aFiles : [$aFiles]
+            );
+        }
         return $aUserFiles;
     }
 }

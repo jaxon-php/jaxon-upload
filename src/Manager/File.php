@@ -16,82 +16,79 @@ namespace Jaxon\Upload\Manager;
 
 use Jaxon\Request\Upload\FileInterface;
 use League\Flysystem\Filesystem;
-use Nyholm\Psr7\UploadedFile;
+use Psr\Http\Message\UploadedFileInterface;
+use Closure;
 
 use function pathinfo;
 
 class File implements FileInterface
 {
     /**
-     * The uploaded file type
-     *
-     * @var string
-     */
-    protected $sType;
-
-    /**
      * The uploaded file name, without the extension and sanitized
      *
      * @var string
      */
-    protected $sName;
-
-    /**
-     * The uploaded file name, with the extension
-     *
-     * @var string
-     */
-    protected $sFilename;
+    private string $sName;
 
     /**
      * The uploaded file path
      *
      * @var string
      */
-    protected $sPath;
-
-    /**
-     * The uploaded file size
-     *
-     * @var int
-     */
-    protected $nSize;
-
-    /**
-     * The uploaded file extension
-     *
-     * @var string
-     */
-    protected $sExtension;
+    private string $sPath;
 
     /**
      * The filesystem where the file is stored
      *
      * @var Filesystem
      */
-    protected $xFilesystem;
+    private Filesystem $xFilesystem;
+
+    /**
+     * True if the file is moved to the upload storage
+     *
+     * @var bool
+     */
+    private bool $bMoved;
+
+    /**
+     * The uploaded temp file
+     *
+     * @var UploadedFileInterface
+     */
+    private UploadedFileInterface $xTempFile;
+
+    /**
+     * A resource to read from the uploaded temp file
+     *
+     * @var resource|null
+     */
+    private $xResource;
 
     /**
      * Create an instance of this class using data from an uploaded file.
      *
      * @param Filesystem $xFilesystem
-     * @param UploadedFile $xHttpFile
      * @param string $sUploadDir
      * @param string $sName
+     * @param UploadedFileInterface $xTempFile
+     * @param Closure $fValidate
+     * @param Closure $fMove
      *
      * @return File
      */
     public static function fromHttpFile(Filesystem $xFilesystem,
-        UploadedFile $xHttpFile, string $sUploadDir, string $sName): File
+        string $sUploadDir, string $sName, UploadedFileInterface $xTempFile,
+        Closure $fValidate, Closure $fMove): File
     {
         $xFile = new File();
         $xFile->xFilesystem = $xFilesystem;
-        $xFile->sType = $xHttpFile->getClientMediaType();
+        $xFile->xTempFile = $xTempFile;
         $xFile->sName = $sName;
-        $xFile->sFilename = $xHttpFile->getClientFilename();
-        $xFile->sExtension = pathinfo($xFile->sFilename, PATHINFO_EXTENSION);
-        $xFile->nSize = $xHttpFile->getSize();
-        $xFile->sPath = $sUploadDir . $xFile->sName . '.' . $xFile->sExtension;
+        $xFile->sPath = $sUploadDir . $sName . '.' . $xFile->extension();
+        $fValidate($xFile);
+        $xFile->bMoved = $fMove($xFile);
+        $xFile->xResource = $xFile->bMoved ? null : $xTempFile->getStream()->detach();
         return $xFile;
     }
 
@@ -112,7 +109,7 @@ class File implements FileInterface
      */
     public function type(): string
     {
-        return $this->sType;
+        return $this->xTempFile->getClientMediaType();
     }
 
     /**
@@ -132,7 +129,7 @@ class File implements FileInterface
      */
     public function filename(): string
     {
-        return $this->sFilename;
+        return $this->xTempFile->getClientFilename();
     }
 
     /**
@@ -152,7 +149,7 @@ class File implements FileInterface
      */
     public function size(): int
     {
-        return $this->nSize;
+        return $this->xTempFile->getSize();
     }
 
     /**
@@ -162,6 +159,36 @@ class File implements FileInterface
      */
     public function extension(): string
     {
-        return $this->sExtension;
+        return pathinfo($this->filename(), PATHINFO_EXTENSION);
+    }
+
+    /**
+     * True if the file is moved to the upload storage
+     *
+     * @return bool
+     */
+    public function moved(): bool
+    {
+        return $this->bMoved;
+    }
+
+    /**
+     * The uploaded temp file.
+     *
+     * @return UploadedFileInterface
+     */
+    public function temp(): UploadedFileInterface
+    {
+        return $this->xTempFile;
+    }
+
+    /**
+     * A resource to read from the uploaded temp file.
+     *
+     * @return resource|null
+     */
+    public function res(): mixed
+    {
+        return $this->xResource;
     }
 }
