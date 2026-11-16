@@ -41,7 +41,7 @@ class UploadManager
      *
      * @var Closure
      */
-    protected $cNameSanitizer = null;
+    protected Closure|null $cNameSanitizer = null;
 
     /**
      * @var array
@@ -263,21 +263,20 @@ class UploadManager
      *
      * @param ServerRequestInterface $xRequest
      *
-     * @return array<string, File>
+     * @return array<string, array<File>>
      * @throws RequestException
      */
     public function readFromHttpData(ServerRequestInterface $xRequest): array
     {
         // Get the uploaded files
         $aUserFiles = [];
-        foreach($xRequest->getUploadedFiles() as $sField => $aFiles)
+        foreach($xRequest->getUploadedFiles() as $sField => $xFiles)
         {
             $sField = trim($sField);
             // Get the path to the upload dir
-            $aUserFiles[$sField] = array_map(
-                $this->processor($this->storage($sField), $sField),
-                is_array($aFiles) ? $aFiles : [$aFiles]
-            );
+            $cProcessor = $this->processor($this->storage($sField), $sField);
+            $aFiles = is_array($xFiles) ? $xFiles : [$xFiles];
+            $aUserFiles[$sField] = array_map($cProcessor, $aFiles);
         }
         return $aUserFiles;
     }

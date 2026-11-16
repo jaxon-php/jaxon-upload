@@ -17,6 +17,7 @@ namespace Jaxon\Upload;
 use Jaxon\Exception\RequestException;
 use Jaxon\Request\Upload\UploadHandlerInterface;
 use Jaxon\Storage\StorageManager;
+use Jaxon\Upload\Manager\File;
 use Jaxon\Upload\Manager\UploadManager;
 use Psr\Http\Message\ServerRequestInterface;
 use Closure;
@@ -57,7 +58,7 @@ class UploadHandler implements UploadHandlerInterface
     /**
      * Get the uploaded files
      *
-     * @return array
+     * @return array<string, array<File>>
      */
     public function files(): array
     {

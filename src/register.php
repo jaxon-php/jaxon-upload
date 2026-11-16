@@ -75,7 +75,6 @@ function registerUpload(): void
 
     // Set a callback to process uploaded files in the incoming requests.
     $jaxon->callback()->before(function() use($di) {
-        /** @var UploadHandler */
         $xUploadHandler = $di->g(UploadHandler::class);
         // The HTTP request
         $xRequest = $di->getRequest();
