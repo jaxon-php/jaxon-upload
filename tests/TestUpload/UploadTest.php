@@ -51,14 +51,14 @@ class UploadTest extends TestCase
      */
     public function setUp(): void
     {
-        _registerUpload();
-
         jaxon()->setAppOption('upload.enabled', true);
         jaxon()->setAppOptions([
             'adapter' => 'local',
             'dir' => __DIR__ . '/../upload/dst',
             // 'options' => [],
         ], 'storage.stores.uploads');
+
+        _registerUpload();
 
         jaxon()->setOption('core.response.send', false);
         $tmpDir = __DIR__ . '/../upload/tmp';
